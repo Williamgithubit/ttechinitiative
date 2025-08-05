@@ -7,13 +7,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { BsMicrosoft } from 'react-icons/bs';
 
-import { UserType } from '@/store/types';
-
-interface ProgramsProps {
-  user: UserType | null;
-}
-
-const Programs = ({ user }: ProgramsProps) => {
+const Programs = () => {
   const [enrolledCourses, setEnrolledCourses] = useState<number[]>([]);
 
   const programs = [
@@ -60,10 +54,6 @@ const Programs = ({ user }: ProgramsProps) => {
   ];
 
   const handleEnrollCourse = (courseId: number) => {
-    if (!user) {
-      alert('Please log in to enroll in courses');
-      return;
-    }
     if (!enrolledCourses.includes(courseId)) {
       setEnrolledCourses(prev => [...prev, courseId]);
       alert('Successfully enrolled in course!');
@@ -113,16 +103,16 @@ const Programs = ({ user }: ProgramsProps) => {
                   </div>
                   <Button
                     onClick={() => handleEnrollCourse(program.id)}
-                    disabled={!!user && enrolledCourses.includes(program.id)}
+                    disabled={enrolledCourses.includes(program.id)}
                     variant="outline"
                     className={`w-full group-hover:bg-[#E32845] group-hover:text-white group-hover:border-[#E32845] transition-colors ${
-                      user && enrolledCourses.includes(program.id)
+                      enrolledCourses.includes(program.id)
                         ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-100 hover:text-green-800 cursor-not-allowed'
                         : ''
                     }`}
                   >
                     <span className="flex items-center justify-center">
-                      {user && enrolledCourses.includes(program.id) ? (
+                      {enrolledCourses.includes(program.id) ? (
                         'Enrolled'
                       ) : (
                         <>

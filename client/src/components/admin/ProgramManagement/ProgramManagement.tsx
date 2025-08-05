@@ -165,29 +165,48 @@ const ProgramManagement: React.FC = () => {
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" component="h2">Program Management</Typography>
+        <Typography variant="h5" component="h2" sx={{ color: '#000054', fontWeight: 'bold' }}>Program Management</Typography>
         <Box display="flex" gap={2}>
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
             onClick={loadPrograms}
             disabled={loading || seeding}
+            sx={{
+              borderColor: '#000054',
+              color: '#000054',
+              '&:hover': {
+                borderColor: '#1a1a6e',
+                backgroundColor: 'rgba(0, 0, 84, 0.04)',
+              },
+            }}
           >
             Refresh
           </Button>
           <Button
-            variant="outlined"
+            variant="contained"
             onClick={handleSeedData}
             disabled={loading || seeding}
+            sx={{
+              backgroundColor: '#000054',
+              '&:hover': {
+                backgroundColor: '#1a1a6e',
+              },
+            }}
           >
             {seeding ? 'Seeding...' : 'Seed Sample Data'}
           </Button>
           <Button
             variant="contained"
-            color="primary"
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
             disabled={loading || seeding}
+            sx={{
+              backgroundColor: '#E32845',
+              '&:hover': {
+                backgroundColor: '#c41e3a',
+              },
+            }}
           >
             Add Program
           </Button>
@@ -200,7 +219,15 @@ const ProgramManagement: React.FC = () => {
         </Alert>
       )}
 
-      <Paper sx={{ p: 2, mb: 3 }}>
+      <Paper 
+        sx={{ 
+          p: 2, 
+          mb: 3,
+          background: 'white',
+          borderRadius: 2,
+          border: '1px solid rgba(0, 0, 84, 0.1)',
+        }}
+      >
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={6}>
             <TextField
@@ -209,8 +236,21 @@ const ProgramManagement: React.FC = () => {
               placeholder="Search programs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#000054',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#000054',
+                  },
+                },
+                '& .MuiInputLabel-root.Mui-focused': {
+                  color: '#000054',
+                },
+              }}
               InputProps={{
-                startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
+                startAdornment: <SearchIcon sx={{ mr: 1, color: '#000054' }} />,
               }}
             />
           </Grid>
@@ -232,16 +272,23 @@ const ProgramManagement: React.FC = () => {
         </Grid>
       </Paper>
 
-      <TableContainer component={Paper}>
+      <TableContainer 
+        component={Paper}
+        sx={{
+          background: 'white',
+          borderRadius: 2,
+          border: '1px solid rgba(0, 0, 84, 0.1)',
+        }}
+      >
         <Table>
-          <TableHead>
+          <TableHead sx={{ background: 'linear-gradient(135deg, #000054 0%, #1a1a6e 100%)' }}>
             <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Start Date</TableCell>
-              <TableCell>End Date</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Name</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Description</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Status</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Start Date</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>End Date</TableCell>
+              <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -447,8 +494,13 @@ const ProgramFormDialog: React.FC<ProgramFormDialogProps> = ({ open, onClose, on
           <Button 
             type="submit" 
             variant="contained" 
-            color="primary"
             disabled={submitting}
+            sx={{
+              backgroundColor: '#E32845',
+              '&:hover': {
+                backgroundColor: '#c41e3a',
+              },
+            }}
           >
             {submitting ? 'Saving...' : (program ? 'Update' : 'Create')} Program
           </Button>

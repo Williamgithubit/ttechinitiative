@@ -1,9 +1,9 @@
-import { 
-  collection, 
-  getDocs, 
-  query, 
-  where, 
-  orderBy, 
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy,
   Timestamp,
   startAfter,
   limit
@@ -49,7 +49,9 @@ export interface ReportData {
   id: string;
   title: string;
   type: 'user_activity' | 'program_performance' | 'engagement' | 'completion_rates';
-  data: any;
+  data: {
+    [key: string]: string | number | boolean | Date | null;
+  };
   createdAt: Date;
   updatedAt: Date;
 }

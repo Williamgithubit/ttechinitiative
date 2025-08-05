@@ -79,7 +79,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ onSuccess, onError }) => {
     }
   };
 
-  const handleSecurityChange = (setting: string) => (event: any) => {
+  const handleSecurityChange = (setting: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
     const newSettings = { ...securitySettings, [setting]: value };
     

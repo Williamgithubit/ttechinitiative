@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { performLogout } from '@/store/Auth/logoutAction';
 import { useAppDispatch } from '@/store/store';
+import Image from 'next/image';
 import {
   Box,
   Drawer,
@@ -20,14 +21,9 @@ import {
   AppBar,
   Toolbar,
   CssBaseline,
-  Paper,
-  Card,
-  CardHeader,
-  CardContent,
   Snackbar,
   Alert
 } from '@mui/material';
-import Grid from '@/components/ui/Grid';
 import {
   InsertChart as InsertChartIcon,
   Settings as SettingsIcon,
@@ -37,10 +33,7 @@ import {
   Menu as MenuIcon,
   People as PeopleIcon,
   School as SchoolIcon,
-  Add as AddIcon,
-  ManageAccounts as ManageAccountsIcon,
-  Email as EmailIcon,
-  Info as InfoIcon
+  Add as AddIcon
 } from '@mui/icons-material';
 
 // Import Admin Components
@@ -88,20 +81,39 @@ export default function AdminDashboard() {
       display: 'flex', 
       flexDirection: 'column',
       height: '100vh',
-      bgcolor: 'background.paper',
+      background: 'linear-gradient(135deg, #000054 0%, #1a1a6e 100%)',
       overflowY: 'auto',
     }}>
-      <Toolbar>
-        <Typography variant="h6" noWrap component="div" sx={{ 
-          color: 'primary.main', 
-          fontWeight: 600,
-          width: '100%',
-          textAlign: 'center',
-        }}>
-          Admin Panel
-        </Typography>
+      <Toolbar sx={{ justifyContent: 'center', py: 2 }}>
+        <Box 
+          component="button"
+          onClick={() => router.push('/')}
+          sx={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            '&:hover': {
+              opacity: 0.8,
+            },
+            transition: 'opacity 0.2s ease',
+          }}
+        >
+          <Image
+            src="/assets/TTI-Logo-kHVWUz7q.png"
+            alt="T-Tech Initiative Logo"
+            width={100}
+            height={40}
+            style={{
+              objectFit: 'contain',
+            }}
+          />
+        </Box>
       </Toolbar>
-      <Divider />
+      <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)' }} />
       <List>
         {tabs.map(({ id, label, icon }) => (
           <ListItem key={id} disablePadding>
@@ -109,20 +121,33 @@ export default function AdminDashboard() {
               selected={tab === id}
               onClick={() => setTab(id)}
               sx={{
+                color: 'rgba(255, 255, 255, 0.8)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                },
                 '&.Mui-selected': {
-                  backgroundColor: 'rgba(25, 118, 210, 0.08)',
+                  backgroundColor: 'rgba(227, 40, 69, 0.2)',
+                  color: 'white',
                   '&:hover': {
-                    backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                    backgroundColor: 'rgba(227, 40, 69, 0.3)',
                   },
                 },
               }}
             >
               <ListItemIcon sx={{ minWidth: 40 }}>
                 {React.cloneElement(icon, {
-                  color: tab === id ? 'primary' : 'inherit'
+                  sx: { color: tab === id ? '#E32845' : 'rgba(255, 255, 255, 0.8)' }
                 })}
               </ListItemIcon>
-              <ListItemText primary={label} />
+              <ListItemText 
+                primary={label} 
+                sx={{ 
+                  '& .MuiListItemText-primary': { 
+                    color: 'inherit' 
+                  } 
+                }} 
+              />
             </ListItemButton>
           </ListItem>
         ))}
@@ -130,9 +155,16 @@ export default function AdminDashboard() {
       <Box sx={{ mt: 'auto', p: 2 }}>
         <Button
           variant="outlined"
-          color="inherit"
           startIcon={<ExitToAppIcon />}
           fullWidth
+          sx={{
+            color: 'white',
+            borderColor: 'rgba(255, 255, 255, 0.3)',
+            '&:hover': {
+              borderColor: '#E32845',
+              backgroundColor: 'rgba(227, 40, 69, 0.1)',
+            },
+          }}
           onClick={async () => {
             try {
               await dispatch(performLogout());
@@ -164,8 +196,8 @@ export default function AdminDashboard() {
           ml: { md: `${drawerWidth}px` },
           boxShadow: 'none',
           borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
-          backgroundColor: 'background.paper',
-          color: 'text.primary',
+          background: 'linear-gradient(135deg, #000054 0%, #1a1a6e 100%)',
+          color: 'white',
         }}
       >
         <Toolbar>
@@ -185,13 +217,18 @@ export default function AdminDashboard() {
             <Box>
               <Button
                 variant="contained"
-                color="primary"
                 startIcon={<AddIcon />}
                 onClick={() => {
                   // TODO: Implement add new functionality
                   setSnackbar({ open: true, message: 'Add new functionality coming soon!', severity: 'info' });
                 }}
-                sx={{ ml: 1 }}
+                sx={{ 
+                  ml: 1,
+                  backgroundColor: '#E32845',
+                  '&:hover': {
+                    backgroundColor: '#c41e3a',
+                  },
+                }}
               >
                 Add New
               </Button>
@@ -249,7 +286,7 @@ export default function AdminDashboard() {
           p: 3,
           width: { md: `calc(100% - ${drawerWidth}px)` },
           mt: { xs: '64px', md: '64px' },
-          backgroundColor: '#f5f5f5',
+          background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
           minHeight: 'calc(100vh - 64px)',
         }}
       >

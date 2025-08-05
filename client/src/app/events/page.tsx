@@ -7,8 +7,8 @@ import { motion } from 'framer-motion';
 import { UserType } from '@/store/types';
 
 interface PageProps {
-  params: { [key: string]: string };
-  searchParams: { [key: string]: string | string[] | undefined };
+  params: Promise<{ [key: string]: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 const Events = ({ searchParams }: PageProps) => {

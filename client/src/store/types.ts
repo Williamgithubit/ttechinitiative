@@ -73,8 +73,13 @@ export type ApiError = {
 // Define the root state type based on the store's reducer structure
 export interface RootState {
   auth: AuthStateType;
+  api: Record<string, unknown>;
   userManagement: UserManagementState;
   program: ProgramState;
+  _persist?: {
+    version: number;
+    rehydrated: boolean;
+  };
 }
 
 // Export AppDispatch type that will be inferred from the store
@@ -86,5 +91,7 @@ export type AppDispatch = import('@reduxjs/toolkit').ThunkDispatch<
 
 // Extend the RootState to include all your state slices
 declare module 'react-redux' {
-  interface DefaultRootState extends RootState {}
+  interface DefaultRootState extends RootState {
+    // Add any additional properties if needed
+  }
 }

@@ -276,13 +276,18 @@ const UserManagement: React.FC = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h5">User Management</Typography>
+        <Typography variant="h5" sx={{ color: '#000054', fontWeight: 'bold' }}>User Management</Typography>
         <Button
           variant="contained"
-          color="primary"
           startIcon={<AddIcon />}
           onClick={() => handleOpenDialog()}
           disabled={isLoading}
+          sx={{
+            backgroundColor: '#E32845',
+            '&:hover': {
+              backgroundColor: '#c41e3a',
+            },
+          }}
         >
           Add User
         </Button>
@@ -294,7 +299,15 @@ const UserManagement: React.FC = () => {
         </Box>
       )}
 
-      <Paper sx={{ p: 2, mb: 3 }}>
+      <Paper 
+        sx={{ 
+          p: 2, 
+          mb: 3,
+          background: 'white',
+          borderRadius: 2,
+          border: '1px solid rgba(0, 0, 84, 0.1)',
+        }}
+      >
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
             <TextField
@@ -303,18 +316,39 @@ const UserManagement: React.FC = () => {
               placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#000054',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#000054',
+                  },
+                },
+                '& .MuiInputLabel-root.Mui-focused': {
+                  color: '#000054',
+                },
+              }}
               InputProps={{
-                startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
+                startAdornment: <SearchIcon sx={{ mr: 1, color: '#000054' }} />,
               }}
             />
           </Grid>
           <Grid item xs={6} md={3}>
             <FormControl fullWidth margin="normal">
-              <InputLabel>Filter by Role</InputLabel>
+              <InputLabel sx={{ '&.Mui-focused': { color: '#000054' } }}>Filter by Role</InputLabel>
               <Select
                 value={roleFilter}
                 label="Filter by Role"
                 onChange={(e) => setRoleFilter(e.target.value)}
+                sx={{
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#000054',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#000054',
+                  },
+                }}
               >
                 <MenuItem value="">All Roles</MenuItem>
                 <MenuItem value="admin">Admin</MenuItem>
@@ -326,11 +360,19 @@ const UserManagement: React.FC = () => {
           </Grid>
           <Grid item xs={6} md={3}>
             <FormControl fullWidth margin="normal">
-              <InputLabel>Filter by Status</InputLabel>
+              <InputLabel sx={{ '&.Mui-focused': { color: '#000054' } }}>Filter by Status</InputLabel>
               <Select
                 value={statusFilter}
                 label="Filter by Status"
                 onChange={(e) => setStatusFilter(e.target.value)}
+                sx={{
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#000054',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#000054',
+                  },
+                }}
               >
                 <MenuItem value="">All Statuses</MenuItem>
                 <MenuItem value="active">Active</MenuItem>
@@ -628,7 +670,17 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
           <Button onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button type="submit" color="primary" variant="contained" disabled={isSubmitting}>
+          <Button 
+            type="submit" 
+            variant="contained" 
+            disabled={isSubmitting}
+            sx={{
+              backgroundColor: '#E32845',
+              '&:hover': {
+                backgroundColor: '#c41e3a',
+              },
+            }}
+          >
             {isSubmitting ? (
               <CircularProgress size={24} color="inherit" />
             ) : user ? (

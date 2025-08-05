@@ -70,13 +70,21 @@ const Settings: React.FC = () => {
     <Box>
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" component="h2">
+        <Typography variant="h5" component="h2" sx={{ color: '#000054', fontWeight: 'bold' }}>
           Settings
         </Typography>
         <Button
           variant="outlined"
           startIcon={<RefreshIcon />}
           onClick={handleRefresh}
+          sx={{
+            borderColor: '#000054',
+            color: '#000054',
+            '&:hover': {
+              borderColor: '#1a1a6e',
+              backgroundColor: 'rgba(0, 0, 84, 0.04)',
+            },
+          }}
         >
           Refresh
         </Button>
@@ -95,12 +103,30 @@ const Settings: React.FC = () => {
       )}
 
       {/* Settings Tabs */}
-      <Paper sx={{ mb: 3 }}>
+      <Paper 
+        sx={{ 
+          mb: 3,
+          background: 'white',
+          borderRadius: 2,
+          border: '1px solid rgba(0, 0, 84, 0.1)',
+        }}
+      >
         <Tabs
           value={tabValue}
           onChange={handleTabChange}
           variant="scrollable"
           scrollButtons="auto"
+          sx={{
+            '& .MuiTab-root': {
+              color: '#000054',
+              '&.Mui-selected': {
+                color: '#E32845',
+              },
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: '#E32845',
+            },
+          }}
         >
           <Tab icon={<AccountIcon />} label="Profile" />
           <Tab icon={<SecurityIcon />} label="Security" />

@@ -277,7 +277,7 @@ const EventManagement: React.FC = () => {
     <Box>
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" component="h2">
+        <Typography variant="h5" component="h2" sx={{ color: '#000054', fontWeight: 'bold' }}>
           Event Management
         </Typography>
         <Box display="flex" gap={2}>
@@ -286,14 +286,28 @@ const EventManagement: React.FC = () => {
             startIcon={<RefreshIcon />}
             onClick={loadEvents}
             disabled={loading}
+            sx={{
+              borderColor: '#000054',
+              color: '#000054',
+              '&:hover': {
+                borderColor: '#1a1a6e',
+                backgroundColor: 'rgba(0, 0, 84, 0.04)',
+              },
+            }}
           >
             Refresh
           </Button>
           <Button
-            variant="outlined"
+            variant="contained"
             startIcon={<StorageIcon />}
             onClick={handleSeedData}
             disabled={seeding}
+            sx={{
+              backgroundColor: '#000054',
+              '&:hover': {
+                backgroundColor: '#1a1a6e',
+              },
+            }}
           >
             {seeding ? 'Seeding...' : 'Seed Sample Data'}
           </Button>
@@ -301,6 +315,13 @@ const EventManagement: React.FC = () => {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
+            disabled={loading}
+            sx={{
+              backgroundColor: '#E32845',
+              '&:hover': {
+                backgroundColor: '#c41e3a',
+              },
+            }}
           >
             Add Event
           </Button>
@@ -479,14 +500,14 @@ const EventManagement: React.FC = () => {
                     <TableCell>
                       <Chip
                         label={event.status}
-                        color={getStatusColor(event.status) as any}
+                        color={getStatusColor(event.status)}
                         size="small"
                       />
                     </TableCell>
                     <TableCell>
                       <Chip
                         label={event.category}
-                        color={getCategoryColor(event.category) as any}
+                        color={getCategoryColor(event.category)}
                         variant="outlined"
                         size="small"
                       />

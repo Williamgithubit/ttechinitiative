@@ -19,21 +19,16 @@ import {
 } from '@mui/material';
 import {
   Refresh as RefreshIcon,
-  TrendingUp as TrendingUpIcon,
   People as PeopleIcon,
   School as SchoolIcon,
   Event as EventIcon,
   Assignment as AssignmentIcon,
-  Analytics as AnalyticsIcon,
-  Assessment as AssessmentIcon,
 } from '@mui/icons-material';
 import {
   LineChart,
   Line,
   AreaChart,
   Area,
-  BarChart,
-  Bar,
   PieChart,
   Pie,
   Cell,
@@ -61,8 +56,17 @@ const formatDate = (date: Date | string | undefined): string => {
 
 const Reports: React.FC = () => {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
-  const [engagementMetrics, setEngagementMetrics] = useState<any>(null);
-  const [programPerformance, setProgramPerformance] = useState<any[]>([]);
+  const [engagementMetrics, setEngagementMetrics] = useState<Record<string, number> | null>(null);
+  const [programPerformance, setProgramPerformance] = useState<Array<{
+    name: string;
+    status: string;
+    startDate: string;
+    endDate: string;
+    enrollments: number;
+    completions: number;
+    completionRate: number;
+    rating: number;
+  }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -81,9 +85,21 @@ const Reports: React.FC = () => {
         getProgramPerformanceMetrics(),
       ]);
 
+      // Transform performance data to match state type
+      const transformedPerformance = performance.map(program => ({
+        name: program.name,
+        status: program.status,
+        startDate: formatDate(program.startDate),
+        endDate: formatDate(program.endDate),
+        enrollments: program.enrollments,
+        completions: program.completions,
+        completionRate: program.completionRate,
+        rating: parseFloat(program.rating),
+      }));
+
       setAnalyticsData(analytics);
       setEngagementMetrics(engagement);
-      setProgramPerformance(performance);
+      setProgramPerformance(transformedPerformance);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load reports data');
     } finally {
@@ -118,7 +134,7 @@ const Reports: React.FC = () => {
     <Box>
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" component="h2">
+        <Typography variant="h5" component="h2" sx={{ color: '#000054', fontWeight: 'bold' }}>
           Reports & Analytics
         </Typography>
         <Button
@@ -126,6 +142,14 @@ const Reports: React.FC = () => {
           startIcon={<RefreshIcon />}
           onClick={loadReportsData}
           disabled={loading}
+          sx={{
+            borderColor: '#000054',
+            color: '#000054',
+            '&:hover': {
+              borderColor: '#1a1a6e',
+              backgroundColor: 'rgba(0, 0, 84, 0.04)',
+            },
+          }}
         >
           Refresh Data
         </Button>
@@ -408,33 +432,33 @@ const Reports: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {programPerformance.map((program) => (
-                    <TableRow key={program.id}>
+                  {programPerformance.map((program, index) => (
+                    <TableRow key={index}>
                       <TableCell>{program.name}</TableCell>
                       <TableCell>
                         <Chip
                           label={program.status}
-                          color={getStatusColor(program.status) as any}
+                          color="default"
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>{formatDate(program.startDate)}</TableCell>
-                      <TableCell>{formatDate(program.endDate)}</TableCell>
+                      <TableCell>{program.startDate}</TableCell>
+                      <TableCell>{program.endDate}</TableCell>
                       <TableCell align="right">{program.enrollments}</TableCell>
                       <TableCell align="right">{program.completions}</TableCell>
                       <TableCell align="right">
                         <Box display="flex" alignItems="center" justifyContent="flex-end">
                           <LinearProgress
                             variant="determinate"
-                            value={program.completionRate}
+                            value={program.completionRate || 0}
                             sx={{ width: 60, mr: 1 }}
                           />
-                          {program.completionRate}%
+                          {program.completionRate || 0}%
                         </Box>
                       </TableCell>
                       <TableCell align="right">
                         <Box display="flex" alignItems="center" justifyContent="flex-end">
-                          ⭐ {program.rating}
+                          ⭐ {program.rating || 0}
                         </Box>
                       </TableCell>
                     </TableRow>

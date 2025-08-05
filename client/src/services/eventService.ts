@@ -8,7 +8,8 @@ import {
   query, 
   orderBy, 
   where,
-  Timestamp 
+  Timestamp,
+  QueryDocumentSnapshot 
 } from 'firebase/firestore';
 import { db } from '@/services/firebase';
 
@@ -58,14 +59,15 @@ export interface CreateEventData {
   isPublic: boolean;
 }
 
-export interface UpdateEventData extends Partial<CreateEventData> {}
+export type UpdateEventData = Partial<CreateEventData>;
 
 // Utility function to convert Firestore Timestamp to Date
-const toDate = (timestamp: any): Date => {
+const toDate = (timestamp: Timestamp | Date | string | null | undefined): Date => {
   if (!timestamp) return new Date();
   if (timestamp instanceof Date) return timestamp;
-  if (timestamp.toDate && typeof timestamp.toDate === 'function') {
-    return timestamp.toDate();
+  // Type guard to check if it's a Timestamp object
+  if (typeof timestamp === 'object' && timestamp !== null && 'toDate' in timestamp && typeof timestamp.toDate === 'function') {
+    return (timestamp as Timestamp).toDate();
   }
   if (typeof timestamp === 'string') return new Date(timestamp);
   return new Date();
@@ -130,17 +132,21 @@ export const createEvent = async (eventData: CreateEventData): Promise<string> =
 export const updateEvent = async (id: string, eventData: UpdateEventData): Promise<void> => {
   try {
     const eventRef = doc(db, 'events', id);
-    const updateData: any = {
-      ...eventData,
+    
+    // Destructure to separate date fields from other fields
+    const { startDate, endDate, ...otherData } = eventData;
+    
+    const updateData: Partial<EventDoc> = {
+      ...otherData,
       updatedAt: Timestamp.now(),
     };
 
     // Convert dates to Timestamps if provided
-    if (eventData.startDate) {
-      updateData.startDate = Timestamp.fromDate(eventData.startDate);
+    if (startDate) {
+      updateData.startDate = Timestamp.fromDate(startDate);
     }
-    if (eventData.endDate) {
-      updateData.endDate = Timestamp.fromDate(eventData.endDate);
+    if (endDate) {
+      updateData.endDate = Timestamp.fromDate(endDate);
     }
 
     await updateDoc(eventRef, updateData);

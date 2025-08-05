@@ -158,7 +158,7 @@ const Dashboard = () => {
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h4" component="h1">
+        <Typography variant="h4" component="h1" sx={{ color: '#000054', fontWeight: 'bold' }}>
           Admin Dashboard
         </Typography>
         <Stack direction="row" spacing={2}>
@@ -167,15 +167,28 @@ const Dashboard = () => {
             startIcon={<RefreshIcon />}
             onClick={handleRefresh}
             disabled={loading}
+            sx={{
+              borderColor: '#000054',
+              color: '#000054',
+              '&:hover': {
+                borderColor: '#1a1a6e',
+                backgroundColor: 'rgba(0, 0, 84, 0.04)',
+              },
+            }}
           >
             Refresh
           </Button>
           <Button
-            variant="outlined"
+            variant="contained"
             startIcon={<StorageIcon />}
             onClick={handleSeedData}
             disabled={loading || seeding}
-            color="secondary"
+            sx={{
+              backgroundColor: '#E32845',
+              '&:hover': {
+                backgroundColor: '#c41e3a',
+              },
+            }}
           >
             {seeding ? 'Seeding...' : 'Seed Sample Data'}
           </Button>
@@ -185,19 +198,28 @@ const Dashboard = () => {
       <Grid container spacing={3} sx={{ mt: 2, mb: 4 }}>
         {statsCards.map((stat, index) => (
           <Grid key={index} xs={12} sm={6} md={3}>
-            <Paper elevation={2}>
-              <Card>
+            <Paper 
+              elevation={2}
+              sx={{
+                background: 'linear-gradient(135deg, #000054 0%, #1a1a6e 100%)',
+                color: 'white',
+                borderRadius: 2,
+              }}
+            >
+              <Card sx={{ background: 'transparent', boxShadow: 'none' }}>
                 <CardContent>
                   <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Box>
-                      <Typography color="textSecondary" gutterBottom>
+                      <Typography color="rgba(255, 255, 255, 0.8)" gutterBottom>
                         {stat.title}
                       </Typography>
-                      <Typography variant="h5" component="div">
+                      <Typography variant="h5" component="div" sx={{ color: 'white', fontWeight: 'bold' }}>
                         {stat.value}
                       </Typography>
                     </Box>
-                    {stat.icon}
+                    <Box sx={{ color: '#E32845' }}>
+                      {React.cloneElement(stat.icon, { sx: { color: '#E32845', fontSize: '2.5rem' } })}
+                    </Box>
                   </Box>
                 </CardContent>
               </Card>
@@ -208,8 +230,17 @@ const Dashboard = () => {
 
       <Grid container spacing={3}>
         <Grid xs={12} md={8}>
-          <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper 
+            elevation={2} 
+            sx={{ 
+              p: 2, 
+              mb: 3,
+              background: 'white',
+              borderRadius: 2,
+              border: '1px solid rgba(0, 0, 84, 0.1)',
+            }}
+          >
+            <Typography variant="h6" gutterBottom sx={{ color: '#000054', fontWeight: 'bold' }}>
               Recent Activity
             </Typography>
             {recentActivity.length > 0 ? (
@@ -230,7 +261,7 @@ const Dashboard = () => {
                         <Chip 
                           label={activity.type.replace('_', ' ')} 
                           size="small" 
-                          color={getActivityColor(activity.type) as any}
+                          color={getActivityColor(activity.type)}
                           variant="outlined"
                         />
                       </Box>
@@ -246,8 +277,16 @@ const Dashboard = () => {
           </Paper>
         </Grid>
         <Grid xs={12} md={4}>
-          <Paper elevation={2} sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper 
+            elevation={2} 
+            sx={{ 
+              p: 2,
+              background: 'white',
+              borderRadius: 2,
+              border: '1px solid rgba(0, 0, 84, 0.1)',
+            }}
+          >
+            <Typography variant="h6" gutterBottom sx={{ color: '#000054', fontWeight: 'bold' }}>
               Quick Actions
             </Typography>
             <Typography color="textSecondary">

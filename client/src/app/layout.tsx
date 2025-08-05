@@ -7,8 +7,9 @@ export const metadata: Metadata = {
   title: "T-Tech Initiative",
   description: "Empowering Liberian youth through digital education and technology training.",
   icons: {
-    icon: '/favicon.ico',
+    icon: '/favicon.png',
     apple: '/apple-touch-icon.png',
+    shortcut: '/favicon.png',
   },
   manifest: '/site.webmanifest',
   themeColor: '#000054',

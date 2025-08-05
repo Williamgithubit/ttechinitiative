@@ -46,7 +46,7 @@ const HeroSection = () => {
               </Button>
               <Button 
                 as="link" 
-                to="/volunteer"
+                href="/volunteer"
                 variant="custom"
                 size="lg"
                 className="rounded-md"

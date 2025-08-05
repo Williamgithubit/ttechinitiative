@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { RootState, useAppDispatch } from '@/store/store';
-import { clearUser } from '@/store/Auth/authSlice';
+import { performLogout } from '@/store/Auth/logoutAction';
 import { FaBars, FaTimes, FaUserCircle } from 'react-icons/fa';
 import { FiLogIn, FiLogOut } from 'react-icons/fi';
 import Image from 'next/image';
@@ -20,10 +20,17 @@ const Header = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const handleLogout = useCallback(() => {
-    dispatch(clearUser());
-    router.push('/login');
-    router.refresh(); // Ensure the page updates after navigation
+  const handleLogout = useCallback(async () => {
+    try {
+      await dispatch(performLogout());
+      router.push('/login');
+      router.refresh(); // Ensure the page updates after navigation
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Still redirect to login even if logout fails
+      router.push('/login');
+      router.refresh();
+    }
   }, [dispatch, router]);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);

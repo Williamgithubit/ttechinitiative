@@ -1,4 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { auth } from '@/services/firebase';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import {
   Box,
   Typography,
@@ -39,22 +41,22 @@ import {
 
 interface User {
   id: string;
-  name: string;
   email: string;
-  role: 'admin' | 'teacher' | 'student' | 'parent';
-  status: 'active' | 'inactive' | 'pending';
-  avatar?: string;
-  lastLogin?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  name: string;
+  role: string;
+  status: string;
+  lastLogin: Date | null;
+  createdAt: Date;
+  emailVerified: boolean;
+  photoURL: string | null;
 }
 
 interface CreateUserData {
-  name: string;
   email: string;
   password: string;
-  role: User['role'];
-  status: User['status'];
+  name: string;
+  role: string;
+  status: string;
 }
 
 interface UserFormDialogProps {
@@ -75,70 +77,83 @@ const UserManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  // Removed unused sorting state as it's not currently implemented in the UI
-  const [orderBy] = useState<keyof User>('name');
-  const [order] = useState<'asc' | 'desc'>('asc');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
-  // Fetch users from API
-  const fetchUsers = useCallback(async () => {
+  const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-      const response = await fetch(`${baseUrl}/api/admin/users`, {
-        credentials: 'include' // Important for sending cookies with the request
+      
+      // Get the current user's ID token
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error('User not authenticated');
+      }
+      
+      const idToken = await currentUser.getIdToken();
+      
+      const response = await fetch('/api/admin/users', {
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json',
+        },
       });
       
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error('Failed to fetch users');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
       
       const data = await response.json();
       setUsers(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      console.error('Error fetching users:', err);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setError(error instanceof Error ? error.message : 'Failed to fetch users');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     fetchUsers();
-  }, [fetchUsers]);
+  }, []);
 
   const handleCreateUser = async (userData: CreateUserData) => {
     try {
       setIsSubmitting(true);
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-      const response = await fetch(`${baseUrl}/api/admin/users`, {
+      
+      // Get the current user's ID token
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error('User not authenticated');
+      }
+      
+      const idToken = await currentUser.getIdToken();
+      
+      const response = await fetch('/api/admin/users', {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${idToken}`,
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify(userData),
       });
-
+      
       if (!response.ok) {
-        let errorMessage = 'Failed to create user';
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-        } catch {
-          const errorText = await response.text();
-          console.error('Error response:', errorText);
-        }
-        throw new Error(errorMessage);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `Failed to create user: ${response.statusText}`);
       }
-
+      
+      // Refresh users list
       await fetchUsers();
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create user');
-      console.error('Error creating user:', err);
-      throw err;
+      
+      // Close dialog
+      handleCloseDialog();
+      
+    } catch (error) {
+      console.error('Error creating user:', error);
+      setError(error instanceof Error ? error.message : 'Failed to create user');
+      throw error;
     } finally {
       setIsSubmitting(false);
     }
@@ -166,11 +181,11 @@ const UserManagement: React.FC = () => {
         //   body: JSON.stringify(userData),
         // });
         // if (!response.ok) throw new Error('Failed to update user');
+        await fetchUsers();
+        handleCloseDialog();
       } else {
         await handleCreateUser(userData);
       }
-      await fetchUsers();
-      handleCloseDialog();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       console.error('Error saving user:', err);
@@ -184,12 +199,26 @@ const UserManagement: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
         setIsLoading(true);
+        
+        // Get the current user's ID token
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+          throw new Error('User not authenticated');
+        }
+        
+        const idToken = await currentUser.getIdToken();
+        
         const response = await fetch(`/api/admin/users/${id}`, {
           method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${idToken}`,
+            'Content-Type': 'application/json',
+          },
         });
         
         if (!response.ok) {
-          throw new Error('Failed to delete user');
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(errorData.error || `Failed to delete user: ${response.statusText}`);
         }
         
         await fetchUsers();
@@ -218,31 +247,14 @@ const UserManagement: React.FC = () => {
     );
   }, [users, searchTerm]);
 
-  const sortedUsers = React.useMemo(() => {
-    return [...filteredUsers].sort((a, b) => {
-      const aValue = a[orderBy] || '';
-      const bValue = b[orderBy] || '';
-      
-      if (aValue < bValue) {
-        return order === 'asc' ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return order === 'asc' ? 1 : -1;
-      }
-      return 0;
-    });
-  }, [filteredUsers, orderBy, order]);
-
   const getStatusIcon = useCallback((status: User['status']) => {
     switch (status) {
       case 'active':
-        return <CheckCircleIcon color="success" fontSize="small" />;
-      case 'inactive':
-        return <CancelIcon color="error" fontSize="small" />;
-      case 'pending':
-        return <CheckCircleIcon color="warning" fontSize="small" />;
+        return <Chip label="Active" color="success" size="small" icon={<CheckCircleIcon />} />;
+      case 'disabled':
+        return <Chip label="Disabled" color="error" size="small" icon={<CancelIcon />} />;
       default:
-        return null;
+        return <Chip label={status} color="default" size="small" />;
     }
   }, []);
 
@@ -297,13 +309,12 @@ const UserManagement: React.FC = () => {
             />
           </Grid>
           <Grid item xs={6} md={3}>
-            <FormControl fullWidth variant="outlined">
-              <InputLabel>Role</InputLabel>
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Filter by Role</InputLabel>
               <Select
-                value=""
-                label="Role"
-                onChange={() => { }}
-                disabled={isLoading}
+                value={roleFilter}
+                label="Filter by Role"
+                onChange={(e) => setRoleFilter(e.target.value)}
               >
                 <MenuItem value="">All Roles</MenuItem>
                 <MenuItem value="admin">Admin</MenuItem>
@@ -314,18 +325,17 @@ const UserManagement: React.FC = () => {
             </FormControl>
           </Grid>
           <Grid item xs={6} md={3}>
-            <FormControl fullWidth variant="outlined">
-              <InputLabel>Status</InputLabel>
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Filter by Status</InputLabel>
               <Select
-                value=""
-                label="Status"
-                onChange={() => { }}
-                disabled={isLoading}
+                value={statusFilter}
+                label="Filter by Status"
+                onChange={(e) => setStatusFilter(e.target.value)}
               >
                 <MenuItem value="">All Statuses</MenuItem>
                 <MenuItem value="active">Active</MenuItem>
                 <MenuItem value="inactive">Inactive</MenuItem>
-                <MenuItem value="pending">Pending</MenuItem>
+                <MenuItem value="suspended">Suspended</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -355,7 +365,7 @@ const UserManagement: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {sortedUsers
+                {filteredUsers
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((user) => (
                     <TableRow key={user.id} hover>
@@ -415,7 +425,7 @@ const UserManagement: React.FC = () => {
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
               component="div"
-              count={sortedUsers.length}
+              count={filteredUsers.length}
               rowsPerPage={rowsPerPage}
               page={page}
               onPageChange={handleChangePage}
@@ -443,25 +453,37 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
   user,
   isSubmitting,
 }) => {
-  const [formData, setFormData] = useState<Omit<CreateUserData, 'id'>>(
-    user
-      ? {
-          name: user.name,
-          email: user.email,
-          password: '',
-          role: user.role,
-          status: user.status,
-        }
-      : {
-          name: '',
-          email: '',
-          password: '',
-          role: 'student',
-          status: 'pending',
-        }
-  );
+  const [formData, setFormData] = useState<CreateUserData>({
+    email: user?.email || '',
+    password: '',
+    name: user?.name || '',
+    role: user?.role || 'student',
+    status: user?.status || 'active',
+  });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Update form data when user prop changes
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        email: user.email,
+        password: '',
+        name: user.name,
+        role: user.role,
+        status: user.status,
+      });
+    } else {
+      setFormData({
+        email: '',
+        password: '',
+        name: '',
+        role: 'student',
+        status: 'active',
+      });
+    }
+    setErrors({});
+  }, [user, open]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -474,6 +496,14 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
+    }
+
+    if (!formData.role) {
+      newErrors.role = 'Role is required';
+    }
+
+    if (!formData.status) {
+      newErrors.status = 'Status is required';
     }
 
     if (!user && !formData.password) {
@@ -490,7 +520,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
     e: React.ChangeEvent<{ name?: string; value: unknown }> | 
     React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | 
     { target: { name: string; value: string } } |
-    { target: { name: string; value: User['role'] | User['status'] } }
+    { target: { name: string; value: User['role'] } }
   ) => {
     const { name, value } = e.target as { name: string; value: string };
     if (name) {
@@ -587,6 +617,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
                   <MenuItem value="active">Active</MenuItem>
                   <MenuItem value="inactive">Inactive</MenuItem>
                   <MenuItem value="pending">Pending</MenuItem>
+                  <MenuItem value="suspended">Suspended</MenuItem>
                 </Select>
                 {errors.status && <FormHelperText>{errors.status}</FormHelperText>}
               </FormControl>

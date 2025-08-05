@@ -23,9 +23,9 @@ const Home = () => {
         "Foundational computer skills for beginners including typing, internet usage, and basic software applications.",
       duration: "8 weeks",
       level: "Beginner",
-      icon: <FaLaptopHouse className="text-4xl mb-4 text-[#000054]" />,
-      image:
-        " https://placehold.co/300x200/3b82f6/ffffff?text=Digital+Literacy",
+      icon: <FaLaptopHouse className="text-4xl mb-4 text-[#000054]" />
+      // image:
+      //   " https://placehold.co/300x200/3b82f6/ffffff?text=Digital+Literacy",
     },
     {
       id: 2,
@@ -34,8 +34,8 @@ const Home = () => {
         "Comprehensive training in HTML, CSS, JavaScript, and modern web frameworks for aspiring developers.",
       duration: "12 weeks",
       level: "Intermediate",
-      icon: <FaLaptopCode className="text-4xl mb-4 text-[#000054]" />,
-      image: " https://placehold.co/300x200/8b5cf6/ffffff?text=Web+Dev",
+      icon: <FaLaptopCode className="text-4xl mb-4 text-[#000054]" />
+      // image: " https://placehold.co/300x200/8b5cf6/ffffff?text=Web+Dev",
     },
     {
       id: 3,
@@ -44,8 +44,8 @@ const Home = () => {
         "Learn the fundamentals of graphic design, including color theory, typography, layout, and visual communication using modern tools and techniques.",
       duration: "10 weeks",
       level: "Intermediate",
-      icon: <FaMobileAlt className="text-4xl mb-4 text-[#000054]" />,
-      image: " https://placehold.co/300x200/06b6d4/ffffff?text=Mobile+Apps",
+      icon: <FaMobileAlt className="text-4xl mb-4 text-[#000054]" />
+      // image: " https://placehold.co/300x200/06b6d4/ffffff?text=Mobile+Apps",
     },
     {
       id: 4,
@@ -55,7 +55,7 @@ const Home = () => {
       duration: "10 weeks",
       level: "Beginner",
       icon: <BsMicrosoft className="text-4xl mb-4 text-[#000054]" />,
-      image: " https://placehold.co/300x200/06b6d4/ffffff?text=Mobile+Apps",
+      // image: " https://placehold.co/300x200/06b6d4/ffffff?text=Mobile+Apps",
     },
   ];
 
@@ -65,7 +65,7 @@ const Home = () => {
       role: "Student",
       content:
         "TTI changed my life. I went from never touching a computer to building my own website in just 3 months.",
-      image: " https://placehold.co/80x80/f59e0b/ffffff?text=MJ",
+      image: "https://placehold.co/80x80/f59e0b/ffffff?text=MJ",
       icon: <FaUserGraduate className="text-2xl text-[#E32845]" />,
     },
     {
@@ -73,7 +73,7 @@ const Home = () => {
       role: "Web Developer",
       content:
         "The web development program gave me the skills I needed to start my own freelance business. Highly recommended!",
-      image: " https://placehold.co/80x80/3b82f6/ffffff?text=JK",
+      image: "https://placehold.co/80x80/3b82f6/ffffff?text=JK",
       icon: <FaLaptopCode className="text-2xl text-[#E32845]" />,
     },
     {
@@ -81,7 +81,7 @@ const Home = () => {
       role: "Mobile Developer",
       content:
         "The instructors are knowledgeable and supportive. I got my first developer job after completing the mobile app course.",
-      image: " https://placehold.co/80x80/10b981/ffffff?text=PD",
+      image: "https://placehold.co/80x80/10b981/ffffff?text=PD",
       icon: <FaMobileAlt className="text-2xl text-[#E32845]" />,
     },
   ];

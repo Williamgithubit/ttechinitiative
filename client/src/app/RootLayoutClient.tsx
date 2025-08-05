@@ -14,12 +14,8 @@ export default function RootLayoutClient({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${process.env.NEXT_PUBLIC_GEIST_SANS} ${process.env.NEXT_PUBLIC_GEIST_MONO} antialiased`}>
-        <ClientLayout>
-          {children}
-        </ClientLayout>
-      </body>
-    </html>
+    <ClientLayout>
+      {children}
+    </ClientLayout>
   );
 }

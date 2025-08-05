@@ -85,16 +85,13 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonComponent
     return (
       <Link
         href={href}
-        passHref
-        legacyBehavior
+        className={commonProps.className}
+        aria-disabled={commonProps['aria-disabled']}
+        aria-busy={commonProps['aria-busy']}
+        {...rest}
+        ref={ref as React.ForwardedRef<HTMLAnchorElement>}
       >
-        <a
-          {...commonProps}
-          {...rest}
-          ref={ref as React.ForwardedRef<HTMLAnchorElement>}
-        >
-          {children}
-        </a>
+        {children}
       </Link>
     );
   }

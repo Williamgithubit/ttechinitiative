@@ -1,45 +1,33 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 
 export async function middleware(request: NextRequest) {
-  const token = await getToken({ req: request });
   const { pathname } = request.nextUrl;
 
-  // Define protected routes and their allowed roles
-  const protectedRoutes = {
-    '/protected/admin': ['admin'],
-    '/protected/teacher': ['teacher'],
-    '/protected/student': ['student'],
-    '/protected/parent': ['parent'],
-    '/api/admin': ['admin'], // Protect all admin API routes
-  };
+  // Define protected routes (excluding API routes which handle their own auth)
+  // Dashboard routes are handled by client-side authentication
+  const protectedRoutes = [
+    '/protected/admin',
+    '/protected/teacher', 
+    '/protected/student',
+    '/protected/parent'
+  ];
 
   // Check if the current path is protected
-  const matchedRoute = Object.keys(protectedRoutes).find(route => 
+  const isProtectedRoute = protectedRoutes.some(route => 
     pathname.startsWith(route)
   );
 
-  // If the route is protected and user is not authenticated, redirect to login
-  if (matchedRoute && !token) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(loginUrl);
+  // If the route is not protected, allow access
+  if (!isProtectedRoute) {
+    return NextResponse.next();
   }
 
-  // If the route is protected and user is authenticated but doesn't have the right role
-  if (matchedRoute && token) {
-    const allowedRoles = protectedRoutes[matchedRoute as keyof typeof protectedRoutes];
-    const userRole = token.role || 'unauthorized';
-    if (!allowedRoles.includes(userRole)) {
-      // Redirect to unauthorized or a default dashboard based on role
-      const defaultRole = token.role || 'unauthorized'; // Provide a default role if undefined
-      const defaultRoute = `/${defaultRole}`;
-      return NextResponse.redirect(new URL(defaultRoute, request.url));
-    }
-  }
-
-  return NextResponse.next();
+  // For protected routes, redirect to login
+  // API routes will handle their own Firebase authentication
+  const loginUrl = new URL('/login', request.url);
+  loginUrl.searchParams.set('callbackUrl', pathname);
+  return NextResponse.redirect(loginUrl);
 }
 
 export const config = {
@@ -48,9 +36,9 @@ export const config = {
     '/protected/teacher/:path*',
     '/protected/student/:path*',
     '/protected/parent/:path*',
-    '/dashboard/:path*',
     '/profile',
     '/settings',
-    '/api/admin/:path*', // Include admin API routes in the matcher
+    // API routes excluded - they handle their own Firebase authentication
+    // Dashboard routes excluded - they use client-side authentication
   ],
 };

@@ -10,13 +10,28 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables from .env file
+// Load environment variables from .env.local file (prioritize local development)
+dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
+// Also load from .env as fallback
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // Initialize Firebase Admin
 console.log('Initializing Firebase Admin...');
+let adminAuth, db;
+
 try {
-  const serviceAccount = JSON.parse(process.env.NEXT_PUBLIC_FIREBASE_ADMIN_SDK_KEY);
+  // Create service account object from environment variables
+  const serviceAccount = {
+    type: "service_account",
+    project_id: process.env.FIREBASE_ADMIN_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    client_email: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+    private_key: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n')
+  };
+  
+  // Validate required fields
+  if (!serviceAccount.project_id || !serviceAccount.client_email || !serviceAccount.private_key) {
+    throw new Error('Missing required Firebase Admin SDK environment variables. Please check FIREBASE_ADMIN_PROJECT_ID, FIREBASE_ADMIN_CLIENT_EMAIL, and FIREBASE_ADMIN_PRIVATE_KEY in your .env.local file.');
+  }
   
   // Initialize Firebase Admin if not already initialized
   let adminApp;
@@ -28,8 +43,8 @@ try {
     adminApp = getApp();
   }
 
-  const adminAuth = getAuth(adminApp);
-  const db = getFirestore(adminApp);
+  adminAuth = getAuth(adminApp);
+  db = getFirestore(adminApp);
   console.log('Firebase Admin initialized successfully');
 } catch (error) {
   console.error('Error initializing Firebase Admin:', error);

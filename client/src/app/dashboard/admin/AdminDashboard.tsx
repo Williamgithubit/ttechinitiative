@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { clearUser } from '@/store/Auth/authSlice';
+import { performLogout } from '@/store/Auth/logoutAction';
 import { useAppDispatch } from '@/store/store';
 import {
   Box,
@@ -130,11 +130,19 @@ export default function AdminDashboard() {
           color="inherit"
           startIcon={<ExitToAppIcon />}
           fullWidth
-          onClick={() => {
-            dispatch(clearUser());
-            setSnackbar({ open: true, message: 'Logged out successfully', severity: 'success' });
-            router.push('/login');
-            router.refresh();
+          onClick={async () => {
+            try {
+              await dispatch(performLogout());
+              setSnackbar({ open: true, message: 'Logged out successfully', severity: 'success' });
+              router.push('/login');
+              router.refresh();
+            } catch (error) {
+              console.error('Logout failed:', error);
+              setSnackbar({ open: true, message: 'Logout failed', severity: 'error' });
+              // Still redirect to login even if logout fails
+              router.push('/login');
+              router.refresh();
+            }
           }}
         >
           Logout

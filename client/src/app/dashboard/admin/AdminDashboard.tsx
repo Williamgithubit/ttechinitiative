@@ -46,7 +46,10 @@ import {
 // Import Admin Components
 import UserManagement from '@/components/admin/UserManagement';
 import ProgramManagement from '@/components/admin/ProgramManagement/ProgramManagement';
+import EventManagement from '@/components/admin/EventManagement/EventManagement';
+import Settings from '@/components/admin/Settings/Settings';
 import Dashboard from '@/components/admin/Dashboard';
+import Reports from '@/components/admin/Reports';
 
 const drawerWidth = 240;
 
@@ -253,81 +256,10 @@ export default function AdminDashboard() {
         {tab === 'dashboard' && <Dashboard />}
         {tab === 'users' && <UserManagement />}
         {tab === 'programs' && <ProgramManagement />}
-        {tab === 'reports' && (
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Reports
-            </Typography>
-            <Typography paragraph>
-              Reports dashboard will be available in the next update.
-            </Typography>
-          </Paper>
-        )}
-        {tab === 'events' && (
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Events
-            </Typography>
-            <Typography paragraph>
-              Events management will be available in the next update.
-            </Typography>
-          </Paper>
-        )}
+        {tab === 'reports' && <Reports />}
+        {tab === 'events' && <EventManagement />}
         {tab === 'settings' && (
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Card>
-                <CardHeader
-                  title="Account Settings"
-                  avatar={<ManageAccountsIcon color="primary" />}
-                />
-                <CardContent>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Update your account information and preferences.
-                  </Typography>
-                  <Button variant="outlined" size="small">
-                    Edit Profile
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Card>
-                <CardHeader
-                  title="Notifications"
-                  avatar={<EmailIcon color="primary" />}
-                />
-                <CardContent>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Manage your notification preferences.
-                  </Typography>
-                  <Button variant="outlined" size="small">
-                    Notification Settings
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12}>
-              <Card>
-                <CardHeader
-                  title="About"
-                  avatar={<InfoIcon color="primary" />}
-                />
-                <CardContent>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Version 1.0.0
-                  </Typography>
-                  <Button 
-                    variant="outlined" 
-                    size="small"
-                    onClick={() => setSnackbar({ open: true, message: 'Check for updates coming soon!', severity: 'info' })}
-                  >
-                    Check for Updates
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+          <Settings />
         )}
 
         {/* Snackbar for notifications */}

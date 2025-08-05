@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Grid from '@/components/ui/Grid';
 import {
   Box,
@@ -24,46 +24,57 @@ import {
   FormHelperText,
   Chip,
   Tooltip,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Search as SearchIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material';
+import {
+  getPrograms,
+  createProgram,
+  updateProgram,
+  deleteProgram,
+  Program,
+  CreateProgramData,
+  UpdateProgramData,
+} from '@/services/programService';
+import { seedProgramData } from '@/utils/seedProgramData';
 
-interface Program {
-  id: string;
-  name: string;
-  description: string;
-  status: 'active' | 'inactive' | 'draft' | 'upcoming';
-  startDate: string;
-  endDate: string;
-}
+
 
 const ProgramManagement: React.FC = () => {
-  const [programs, setPrograms] = useState<Program[]>([
-    {
-      id: '1',
-      name: 'Summer Coding Camp',
-      description: 'Introduction to programming for beginners',
-      status: 'active',
-      startDate: '2023-06-01',
-      endDate: '2023-08-31',
-    },
-    {
-      id: '2',
-      name: 'Robotics Workshop',
-      description: 'Hands-on robotics for intermediate students',
-      status: 'upcoming',
-      startDate: '2023-09-15',
-      endDate: '2023-12-15',
-    },
-  ]);
-
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [submitting, setSubmitting] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+
+  // Load programs on component mount
+  useEffect(() => {
+    loadPrograms();
+  }, []);
+
+  const loadPrograms = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const programsData = await getPrograms();
+      setPrograms(programsData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load programs');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpenDialog = (program: Program | null = null) => {
     setEditingProgram(program);
@@ -75,27 +86,66 @@ const ProgramManagement: React.FC = () => {
     setEditingProgram(null);
   };
 
-  const handleSaveProgram = (program: Program) => {
-    if (editingProgram) {
-      // Update existing program
-      setPrograms(programs.map(p => p.id === program.id ? program : p));
-    } else {
-      // Add new program
-      setPrograms([...programs, { ...program, id: Date.now().toString() }]);
+  const handleSaveProgram = async (programData: CreateProgramData) => {
+    try {
+      setSubmitting(true);
+      setError(null);
+
+      if (editingProgram) {
+        // Update existing program
+        const updateData: UpdateProgramData = {
+          ...programData,
+          id: editingProgram.id,
+        };
+        await updateProgram(updateData);
+      } else {
+        // Create new program
+        await createProgram(programData);
+      }
+
+      // Reload programs to get fresh data
+      await loadPrograms();
+      handleCloseDialog();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save program');
+    } finally {
+      setSubmitting(false);
     }
-    handleCloseDialog();
   };
 
-  const handleDeleteProgram = (id: string) => {
+  const handleDeleteProgram = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this program?')) {
-      setPrograms(programs.filter(program => program.id !== id));
+      try {
+        setError(null);
+        await deleteProgram(id);
+        // Reload programs to get fresh data
+        await loadPrograms();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to delete program');
+      }
     }
   };
 
-  const filteredPrograms = programs.filter(program =>
-    program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    program.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSeedData = async () => {
+    try {
+      setSeeding(true);
+      setError(null);
+      await seedProgramData();
+      // Reload programs to show the new data
+      await loadPrograms();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to seed sample data');
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  const filteredPrograms = programs.filter(program => {
+    const matchesSearch = (program.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                         (program.description?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === '' || program.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const getStatusColor = (status: string): 'success' | 'error' | 'warning' | 'default' => {
     switch (status) {
@@ -116,15 +166,39 @@ const ProgramManagement: React.FC = () => {
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h5" component="h2">Program Management</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-        >
-          Add Program
-        </Button>
+        <Box display="flex" gap={2}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={loadPrograms}
+            disabled={loading || seeding}
+          >
+            Refresh
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={handleSeedData}
+            disabled={loading || seeding}
+          >
+            {seeding ? 'Seeding...' : 'Seed Sample Data'}
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+            disabled={loading || seeding}
+          >
+            Add Program
+          </Button>
+        </Box>
       </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
 
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
@@ -144,9 +218,9 @@ const ProgramManagement: React.FC = () => {
             <FormControl fullWidth variant="outlined">
               <InputLabel>Status</InputLabel>
               <Select
-                value=""
+                value={statusFilter}
                 label="Status"
-                onChange={() => { }}
+                onChange={(e) => setStatusFilter(e.target.value)}
               >
                 <MenuItem value="">All Statuses</MenuItem>
                 <MenuItem value="active">Active</MenuItem>
@@ -165,39 +239,60 @@ const ProgramManagement: React.FC = () => {
               <TableCell>Name</TableCell>
               <TableCell>Description</TableCell>
               <TableCell>Status</TableCell>
-              <TableCell>Duration</TableCell>
+              <TableCell>Start Date</TableCell>
+              <TableCell>End Date</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredPrograms.map((program) => (
-              <TableRow key={program.id}>
-                <TableCell>{program.name}</TableCell>
-                <TableCell>{program.description}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={program.status}
-                    color={getStatusColor(program.status)}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>
-                  {new Date(program.startDate).toLocaleDateString()} - {new Date(program.endDate).toLocaleDateString()}
-                </TableCell>
-                <TableCell align="right">
-                  <Tooltip title="Edit">
-                    <IconButton onClick={() => handleOpenDialog(program)}>
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton onClick={() => handleDeleteProgram(program.id)} color="error">
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <CircularProgress />
+                  <Typography variant="body2" sx={{ mt: 2 }}>Loading programs...</Typography>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : filteredPrograms.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {programs.length === 0 ? 'No programs found. Create your first program!' : 'No programs match your search criteria.'}
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredPrograms.map((program) => (
+                <TableRow key={program.id}>
+                  <TableCell>{program.name}</TableCell>
+                  <TableCell>{program.description}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={program.status}
+                      color={getStatusColor(program.status)}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {new Date(program.startDate).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(program.endDate).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell align="right">
+                    <Tooltip title="Edit">
+                      <IconButton onClick={() => handleOpenDialog(program)}>
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton onClick={() => handleDeleteProgram(program.id)} color="error">
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -207,6 +302,7 @@ const ProgramManagement: React.FC = () => {
         onClose={handleCloseDialog}
         onSave={handleSaveProgram}
         program={editingProgram}
+        submitting={submitting}
       />
     </Box>
   );
@@ -215,12 +311,13 @@ const ProgramManagement: React.FC = () => {
 interface ProgramFormDialogProps {
   open: boolean;
   onClose: () => void;
-  onSave: (program: Program) => void;
+  onSave: (program: CreateProgramData) => void;
   program: Program | null;
+  submitting: boolean;
 }
 
-const ProgramFormDialog: React.FC<ProgramFormDialogProps> = ({ open, onClose, onSave, program }) => {
-  const [formData, setFormData] = useState<Omit<Program, 'id'>>(
+const ProgramFormDialog: React.FC<ProgramFormDialogProps> = ({ open, onClose, onSave, program, submitting }) => {
+  const [formData, setFormData] = useState<CreateProgramData>(
     program || {
       name: '',
       description: '',
@@ -240,11 +337,29 @@ const ProgramFormDialog: React.FC<ProgramFormDialogProps> = ({ open, onClose, on
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
-      ...formData,
-      id: program?.id || '',
-    } as Program);
+    onSave(formData);
   };
+
+  // Update form data when program prop changes
+  React.useEffect(() => {
+    if (program) {
+      setFormData({
+        name: program.name,
+        description: program.description,
+        status: program.status,
+        startDate: program.startDate,
+        endDate: program.endDate,
+      });
+    } else {
+      setFormData({
+        name: '',
+        description: '',
+        status: 'draft',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      });
+    }
+  }, [program]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -328,9 +443,14 @@ const ProgramFormDialog: React.FC<ProgramFormDialogProps> = ({ open, onClose, on
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="contained" color="primary">
-            {program ? 'Update' : 'Create'} Program
+          <Button onClick={onClose} disabled={submitting}>Cancel</Button>
+          <Button 
+            type="submit" 
+            variant="contained" 
+            color="primary"
+            disabled={submitting}
+          >
+            {submitting ? 'Saving...' : (program ? 'Update' : 'Create')} Program
           </Button>
         </DialogActions>
       </form>

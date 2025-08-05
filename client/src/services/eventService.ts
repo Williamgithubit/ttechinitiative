@@ -1,0 +1,223 @@
+import { 
+  collection, 
+  addDoc, 
+  getDocs, 
+  doc, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  orderBy, 
+  where,
+  Timestamp 
+} from 'firebase/firestore';
+import { db } from '@/services/firebase';
+
+export interface Event {
+  id: string;
+  title: string;
+  description: string;
+  startDate: Date;
+  endDate: Date;
+  location: string;
+  capacity: number;
+  registrations: number;
+  status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+  category: 'workshop' | 'seminar' | 'conference' | 'training' | 'networking' | 'other';
+  price: number;
+  isPublic: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface EventDoc {
+  title: string;
+  description: string;
+  startDate: Timestamp;
+  endDate: Timestamp;
+  location: string;
+  capacity: number;
+  registrations: number;
+  status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+  category: 'workshop' | 'seminar' | 'conference' | 'training' | 'networking' | 'other';
+  price: number;
+  isPublic: boolean;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface CreateEventData {
+  title: string;
+  description: string;
+  startDate: Date;
+  endDate: Date;
+  location: string;
+  capacity: number;
+  status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+  category: 'workshop' | 'seminar' | 'conference' | 'training' | 'networking' | 'other';
+  price: number;
+  isPublic: boolean;
+}
+
+export interface UpdateEventData extends Partial<CreateEventData> {}
+
+// Utility function to convert Firestore Timestamp to Date
+const toDate = (timestamp: any): Date => {
+  if (!timestamp) return new Date();
+  if (timestamp instanceof Date) return timestamp;
+  if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+    return timestamp.toDate();
+  }
+  if (typeof timestamp === 'string') return new Date(timestamp);
+  return new Date();
+};
+
+// Convert Firestore document to Event interface
+const convertDocToEvent = (id: string, doc: EventDoc): Event => ({
+  id,
+  title: doc.title,
+  description: doc.description,
+  startDate: toDate(doc.startDate),
+  endDate: toDate(doc.endDate),
+  location: doc.location,
+  capacity: doc.capacity,
+  registrations: doc.registrations || 0,
+  status: doc.status,
+  category: doc.category,
+  price: doc.price || 0,
+  isPublic: doc.isPublic,
+  createdAt: toDate(doc.createdAt),
+  updatedAt: toDate(doc.updatedAt),
+});
+
+// Get all events
+export const getEvents = async (): Promise<Event[]> => {
+  try {
+    const eventsRef = collection(db, 'events');
+    const q = query(eventsRef, orderBy('startDate', 'desc'));
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => 
+      convertDocToEvent(doc.id, doc.data() as EventDoc)
+    );
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    throw new Error('Failed to fetch events');
+  }
+};
+
+// Create a new event
+export const createEvent = async (eventData: CreateEventData): Promise<string> => {
+  try {
+    const now = Timestamp.now();
+    const docData: EventDoc = {
+      ...eventData,
+      startDate: Timestamp.fromDate(eventData.startDate),
+      endDate: Timestamp.fromDate(eventData.endDate),
+      registrations: 0,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const docRef = await addDoc(collection(db, 'events'), docData);
+    return docRef.id;
+  } catch (error) {
+    console.error('Error creating event:', error);
+    throw new Error('Failed to create event');
+  }
+};
+
+// Update an existing event
+export const updateEvent = async (id: string, eventData: UpdateEventData): Promise<void> => {
+  try {
+    const eventRef = doc(db, 'events', id);
+    const updateData: any = {
+      ...eventData,
+      updatedAt: Timestamp.now(),
+    };
+
+    // Convert dates to Timestamps if provided
+    if (eventData.startDate) {
+      updateData.startDate = Timestamp.fromDate(eventData.startDate);
+    }
+    if (eventData.endDate) {
+      updateData.endDate = Timestamp.fromDate(eventData.endDate);
+    }
+
+    await updateDoc(eventRef, updateData);
+  } catch (error) {
+    console.error('Error updating event:', error);
+    throw new Error('Failed to update event');
+  }
+};
+
+// Delete an event
+export const deleteEvent = async (id: string): Promise<void> => {
+  try {
+    await deleteDoc(doc(db, 'events', id));
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    throw new Error('Failed to delete event');
+  }
+};
+
+// Get events by status
+export const getEventsByStatus = async (status: Event['status']): Promise<Event[]> => {
+  try {
+    const eventsRef = collection(db, 'events');
+    const q = query(
+      eventsRef, 
+      where('status', '==', status),
+      orderBy('startDate', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => 
+      convertDocToEvent(doc.id, doc.data() as EventDoc)
+    );
+  } catch (error) {
+    console.error('Error fetching events by status:', error);
+    throw new Error('Failed to fetch events by status');
+  }
+};
+
+// Get upcoming events
+export const getUpcomingEvents = async (): Promise<Event[]> => {
+  try {
+    const eventsRef = collection(db, 'events');
+    const now = Timestamp.now();
+    const q = query(
+      eventsRef,
+      where('startDate', '>', now),
+      orderBy('startDate', 'asc')
+    );
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => 
+      convertDocToEvent(doc.id, doc.data() as EventDoc)
+    );
+  } catch (error) {
+    console.error('Error fetching upcoming events:', error);
+    throw new Error('Failed to fetch upcoming events');
+  }
+};
+
+// Get events count by status
+export const getEventsStats = async () => {
+  try {
+    const events = await getEvents();
+    const stats = {
+      total: events.length,
+      upcoming: events.filter(e => e.status === 'upcoming').length,
+      ongoing: events.filter(e => e.status === 'ongoing').length,
+      completed: events.filter(e => e.status === 'completed').length,
+      cancelled: events.filter(e => e.status === 'cancelled').length,
+      totalRegistrations: events.reduce((sum, e) => sum + e.registrations, 0),
+      totalCapacity: events.reduce((sum, e) => sum + e.capacity, 0),
+    };
+
+    return stats;
+  } catch (error) {
+    console.error('Error fetching events stats:', error);
+    throw new Error('Failed to fetch events statistics');
+  }
+};

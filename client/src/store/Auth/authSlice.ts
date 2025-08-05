@@ -236,6 +236,46 @@ export const login = createAsyncThunk<
   }
 );
 
+// Update user profile async thunk
+export const updateUser = createAsyncThunk<
+  User,
+  Partial<User>,
+  { rejectValue: string }
+>(
+  'auth/updateUser',
+  async (userData, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as { auth: AuthState };
+      const currentUser = state.auth.user;
+      
+      if (!currentUser) {
+        return rejectWithValue('No authenticated user found');
+      }
+
+      // Update user document in Firestore
+      const userDocRef = doc(db, 'users', currentUser.uid);
+      const updateData = {
+        ...userData,
+        updatedAt: new Date().toISOString(),
+      };
+      
+      await setDoc(userDocRef, updateData, { merge: true });
+      
+      // Return the updated user object
+      const updatedUser: User = {
+        ...currentUser,
+        ...updateData,
+      };
+      
+      console.log('User profile updated successfully:', updatedUser);
+      return updatedUser;
+    } catch (error) {
+      console.error('Update user error:', error);
+      return rejectWithValue(error instanceof Error ? error.message : 'Update failed');
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -330,6 +370,23 @@ const authSlice = createSlice({
         state.user = null;
         state.role = null;
         state.isAuthenticated = false;
+      })
+      .addCase(updateUser.pending, (state) => {
+        console.log('Update user pending...');
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateUser.fulfilled, (state, action) => {
+        console.log('Update user fulfilled:', action.payload);
+        state.loading = false;
+        state.user = action.payload;
+        state.role = action.payload.role;
+        state.error = null;
+      })
+      .addCase(updateUser.rejected, (state, action) => {
+        console.error('Update user rejected:', action.payload || 'Unknown error');
+        state.loading = false;
+        state.error = action.payload || 'Update failed';
       });
   },
 });

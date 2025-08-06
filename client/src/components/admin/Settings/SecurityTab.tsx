@@ -15,6 +15,8 @@ import {
   Chip,
   Button,
   Alert,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Lock as LockIcon,
@@ -32,6 +34,9 @@ interface SecurityTabProps {
 }
 
 const SecurityTab: React.FC<SecurityTabProps> = ({ onSuccess, onError }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   // Security settings state
   const [securitySettings, setSecuritySettings] = useState({
     twoFactorEnabled: false,
@@ -121,12 +126,22 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ onSuccess, onError }) => {
       {/* Security Overview */}
       <Box sx={{ flex: '1 1 100%' }}>
         <Card>
-          <CardHeader title="Security Overview" />
+          <CardHeader 
+            title="Security Overview" 
+            titleTypographyProps={{ 
+              sx: { 
+                fontSize: { xs: '1.1rem', sm: '1.25rem' } 
+              } 
+            }} 
+          />
           <CardContent>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, alignItems: 'center' }}>
               <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)' } }}>
                 <Box display="flex" alignItems="center" gap={2}>
-                  <ShieldIcon color={securityLevel.color} fontSize="large" />
+                  <ShieldIcon 
+                    color={securityLevel.color} 
+                    sx={{ fontSize: { xs: '2rem', sm: '2.5rem' } }} 
+                  />
                   <Box>
                     <Typography variant="h6">
                       Security Level: {securityLevel.level}
@@ -167,7 +182,14 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ onSuccess, onError }) => {
       {/* Authentication Settings */}
       <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(50% - 12px)' } }}>
         <Card>
-          <CardHeader title="Authentication" />
+          <CardHeader 
+            title="Security Settings" 
+            titleTypographyProps={{ 
+              sx: { 
+                fontSize: { xs: '1.1rem', sm: '1.25rem' } 
+              } 
+            }} 
+          />
           <CardContent>
             <List>
               <ListItem>
@@ -247,11 +269,9 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ onSuccess, onError }) => {
                   value={securitySettings.sessionTimeout}
                   onChange={handleSecurityChange('sessionTimeout')}
                   onBlur={() => handleTextFieldSave('sessionTimeout')}
-                  inputProps={{ min: 5, max: 480 }}
-                  helperText="Sessions will automatically expire after this time"
-                  InputProps={{
-                    startAdornment: <TimerIcon sx={{ mr: 1, color: 'text.secondary' }} />,
-                  }}
+                  size={isMobile ? "small" : "medium"}
+                  InputProps={{ inputProps: { min: 5, max: 240 } }}
+                  helperText="How long until inactive sessions are logged out"
                 />
               </Box>
               
@@ -263,8 +283,9 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ onSuccess, onError }) => {
                   value={securitySettings.passwordExpiry}
                   onChange={handleSecurityChange('passwordExpiry')}
                   onBlur={() => handleTextFieldSave('passwordExpiry')}
-                  inputProps={{ min: 30, max: 365 }}
-                  helperText="Force password change after this many days"
+                  size={isMobile ? "small" : "medium"}
+                  InputProps={{ inputProps: { min: 30, max: 365 } }}
+                  helperText="How often passwords must be changed"
                 />
               </Box>
               
@@ -273,10 +294,11 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ onSuccess, onError }) => {
                   fullWidth
                   label="IP Whitelist"
                   multiline
-                  rows={3}
+                  rows={isMobile ? 2 : 3}
                   value={securitySettings.ipWhitelist}
                   onChange={handleSecurityChange('ipWhitelist')}
                   onBlur={() => handleTextFieldSave('ipWhitelist')}
+                  size={isMobile ? "small" : "medium"}
                   placeholder="192.168.1.1&#10;10.0.0.1&#10;203.0.113.1"
                   helperText="Enter IP addresses, one per line. Leave empty to allow all IPs."
                 />
@@ -289,7 +311,14 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ onSuccess, onError }) => {
       {/* Security Recommendations */}
       <Box sx={{ flex: '1 1 100%' }}>
         <Card>
-          <CardHeader title="Security Recommendations" />
+          <CardHeader 
+            title="Security Recommendations" 
+            titleTypographyProps={{ 
+              sx: { 
+                fontSize: { xs: '1.1rem', sm: '1.25rem' } 
+              } 
+            }} 
+          />
           <CardContent>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
               {!securitySettings.twoFactorEnabled && (
@@ -345,31 +374,53 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ onSuccess, onError }) => {
       {/* Quick Actions */}
       <Box sx={{ flex: '1 1 100%' }}>
         <Card>
-          <CardHeader title="Quick Actions" />
+          <CardHeader 
+            title="Quick Actions" 
+            titleTypographyProps={{ 
+              sx: { 
+                fontSize: { xs: '1.1rem', sm: '1.25rem' } 
+              } 
+            }} 
+          />
           <CardContent>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-              <Box>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 1, sm: 2 } }}>
+              <Box sx={{ width: { xs: '100%', sm: 'auto' } }}>
                 <Button
                   variant="outlined"
                   onClick={() => onSuccess('Session management coming soon!')}
+                  fullWidth={isMobile}
+                  size={isMobile ? "small" : "medium"}
+                  sx={{
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  }}
                 >
-                  View Active Sessions
+                  {isMobile ? "Active Sessions" : "View Active Sessions"}
                 </Button>
               </Box>
-              <Box>
+              <Box sx={{ width: { xs: '100%', sm: 'auto' } }}>
                 <Button
                   variant="outlined"
                   onClick={() => onSuccess('Device management coming soon!')}
+                  fullWidth={isMobile}
+                  size={isMobile ? "small" : "medium"}
+                  sx={{
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  }}
                 >
-                  Manage Trusted Devices
+                  {isMobile ? "Trusted Devices" : "Manage Trusted Devices"}
                 </Button>
               </Box>
-              <Box>
+              <Box sx={{ width: { xs: '100%', sm: 'auto' } }}>
                 <Button
                   variant="outlined"
                   onClick={() => onSuccess('Activity log coming soon!')}
+                  fullWidth={isMobile}
+                  size={isMobile ? "small" : "medium"}
+                  sx={{
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  }}
                 >
-                  View Security Log
+                  {isMobile ? "Security Log" : "View Security Log"}
                 </Button>
               </Box>
             </Box>

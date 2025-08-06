@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useMediaQuery, useTheme } from '@mui/material';
 import Grid from '@/components/ui/Grid';
 import {
   Box,
@@ -47,11 +48,19 @@ import { seedProgramData } from '@/utils/seedProgramData';
 
 
 
-const ProgramManagement: React.FC = () => {
+interface ProgramManagementProps {
+  openDialog?: boolean;
+  onCloseDialog?: () => void;
+}
+
+const ProgramManagement: React.FC<ProgramManagementProps> = ({ openDialog = false, onCloseDialog }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [openDialog, setOpenDialog] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -62,6 +71,17 @@ const ProgramManagement: React.FC = () => {
   useEffect(() => {
     loadPrograms();
   }, []);
+
+  // Handle external dialog open request from parent component
+  useEffect(() => {
+    if (openDialog) {
+      handleOpenDialog();
+      // Call the parent's onCloseDialog to reset the state in the parent
+      if (onCloseDialog) {
+        onCloseDialog();
+      }
+    }
+  }, [openDialog, onCloseDialog]);
 
   const loadPrograms = async () => {
     try {
@@ -78,11 +98,11 @@ const ProgramManagement: React.FC = () => {
 
   const handleOpenDialog = (program: Program | null = null) => {
     setEditingProgram(program);
-    setOpenDialog(true);
+    setDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
-    setOpenDialog(false);
+    setDialogOpen(false);
     setEditingProgram(null);
   };
 
@@ -164,14 +184,42 @@ const ProgramManagement: React.FC = () => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" component="h2" sx={{ color: '#000054', fontWeight: 'bold' }}>Program Management</Typography>
-        <Box display="flex" gap={2}>
+      <Box 
+        sx={{
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'stretch', sm: 'center' },
+          gap: { xs: 2, sm: 0 },
+          mb: 3
+        }}
+      >
+        <Typography 
+          variant="h5" 
+          component="h2" 
+          sx={{ 
+            color: '#000054', 
+            fontWeight: 'bold',
+            fontSize: { xs: '1.25rem', sm: '1.5rem' }
+          }}
+        >
+          Program Management
+        </Typography>
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: { xs: 1, sm: 2 },
+            width: { xs: '100%', sm: 'auto' }
+          }}
+        >
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
             onClick={loadPrograms}
             disabled={loading || seeding}
+            fullWidth={isMobile}
+            size={isMobile ? "small" : "medium"}
             sx={{
               borderColor: '#000054',
               color: '#000054',
@@ -181,12 +229,14 @@ const ProgramManagement: React.FC = () => {
               },
             }}
           >
-            Refresh
+            {isMobile ? "" : "Refresh"}
           </Button>
           <Button
             variant="contained"
             onClick={handleSeedData}
             disabled={loading || seeding}
+            fullWidth={isMobile}
+            size={isMobile ? "small" : "medium"}
             sx={{
               backgroundColor: '#000054',
               '&:hover': {
@@ -194,13 +244,15 @@ const ProgramManagement: React.FC = () => {
               },
             }}
           >
-            {seeding ? 'Seeding...' : 'Seed Sample Data'}
+            {seeding ? 'Seeding...' : (isMobile ? 'Seed Data' : 'Seed Sample Data')}
           </Button>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
             disabled={loading || seeding}
+            fullWidth={isMobile}
+            size={isMobile ? "small" : "medium"}
             sx={{
               backgroundColor: '#E32845',
               '&:hover': {
@@ -208,7 +260,7 @@ const ProgramManagement: React.FC = () => {
               },
             }}
           >
-            Add Program
+            {isMobile ? 'Add' : 'Add Program'}
           </Button>
         </Box>
       </Box>
@@ -221,15 +273,15 @@ const ProgramManagement: React.FC = () => {
 
       <Paper 
         sx={{ 
-          p: 2, 
+          p: { xs: 1.5, sm: 2 }, 
           mb: 3,
           background: 'white',
           borderRadius: 2,
           border: '1px solid rgba(0, 0, 84, 0.1)',
         }}
       >
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={6}>
+        <Grid container spacing={{ xs: 1, sm: 2 }} alignItems="center">
+          <Grid item xs={12} sm={6} md={6}>
             <TextField
               fullWidth
               variant="outlined"
@@ -254,7 +306,7 @@ const ProgramManagement: React.FC = () => {
               }}
             />
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <FormControl fullWidth variant="outlined">
               <InputLabel>Status</InputLabel>
               <Select
@@ -278,16 +330,17 @@ const ProgramManagement: React.FC = () => {
           background: 'white',
           borderRadius: 2,
           border: '1px solid rgba(0, 0, 84, 0.1)',
+          overflowX: 'auto',
         }}
       >
-        <Table>
+        <Table size={isMobile ? "small" : "medium"}>
           <TableHead sx={{ background: 'linear-gradient(135deg, #000054 0%, #1a1a6e 100%)' }}>
             <TableRow>
               <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Name</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Description</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold', display: { xs: 'none', sm: 'table-cell' } }}>Description</TableCell>
               <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Status</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Start Date</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>End Date</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold', display: { xs: 'none', md: 'table-cell' } }}>Start Date</TableCell>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold', display: { xs: 'none', md: 'table-cell' } }}>End Date</TableCell>
               <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -310,8 +363,31 @@ const ProgramManagement: React.FC = () => {
             ) : (
               filteredPrograms.map((program) => (
                 <TableRow key={program.id}>
-                  <TableCell>{program.name}</TableCell>
-                  <TableCell>{program.description}</TableCell>
+                  <TableCell>
+                    <Typography 
+                      sx={{ 
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        fontWeight: 'medium'
+                      }}
+                    >
+                      {program.name}
+                    </Typography>
+                  </TableCell>
+                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                    <Typography 
+                      sx={{ 
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        maxWidth: { sm: '150px', md: '250px' }
+                      }}
+                    >
+                      {program.description}
+                    </Typography>
+                  </TableCell>
                   <TableCell>
                     <Chip
                       label={program.status}
@@ -319,23 +395,35 @@ const ProgramManagement: React.FC = () => {
                       size="small"
                     />
                   </TableCell>
-                  <TableCell>
-                    {new Date(program.startDate).toLocaleDateString()}
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                      {new Date(program.startDate).toLocaleDateString()}
+                    </Typography>
                   </TableCell>
-                  <TableCell>
-                    {new Date(program.endDate).toLocaleDateString()}
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                      {new Date(program.endDate).toLocaleDateString()}
+                    </Typography>
                   </TableCell>
                   <TableCell align="right">
-                    <Tooltip title="Edit">
-                      <IconButton onClick={() => handleOpenDialog(program)}>
-                        <EditIcon />
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
+                      <IconButton 
+                        onClick={() => handleOpenDialog(program)} 
+                        color="primary"
+                        size={isMobile ? "small" : "medium"}
+                        sx={{ p: { xs: 0.5, sm: 1 } }}
+                      >
+                        <EditIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
                       </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                      <IconButton onClick={() => handleDeleteProgram(program.id)} color="error">
-                        <DeleteIcon />
+                      <IconButton 
+                        onClick={() => handleDeleteProgram(program.id)} 
+                        color="error"
+                        size={isMobile ? "small" : "medium"}
+                        sx={{ p: { xs: 0.5, sm: 1 } }}
+                      >
+                        <DeleteIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
                       </IconButton>
-                    </Tooltip>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))
@@ -345,7 +433,7 @@ const ProgramManagement: React.FC = () => {
       </TableContainer>
 
       <ProgramFormDialog
-        open={openDialog}
+        open={dialogOpen}
         onClose={handleCloseDialog}
         onSave={handleSaveProgram}
         program={editingProgram}
@@ -364,6 +452,8 @@ interface ProgramFormDialogProps {
 }
 
 const ProgramFormDialog: React.FC<ProgramFormDialogProps> = ({ open, onClose, onSave, program, submitting }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [formData, setFormData] = useState<CreateProgramData>(
     program || {
       name: '',
@@ -409,11 +499,32 @@ const ProgramFormDialog: React.FC<ProgramFormDialogProps> = ({ open, onClose, on
   }, [program]);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="sm" 
+      fullWidth
+      PaperProps={{
+        sx: {
+          width: { xs: '95%', sm: '80%', md: '65%' },
+          maxWidth: { xs: '95vw', sm: '600px' },
+          m: { xs: 1, sm: 'auto' },
+          borderRadius: { xs: 1, sm: 2 },
+        }
+      }}
+    >
       <form onSubmit={handleSubmit}>
-        <DialogTitle>{program ? 'Edit Program' : 'Add New Program'}</DialogTitle>
-        <DialogContent dividers>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
+        <DialogTitle sx={{ 
+          fontSize: { xs: '1.1rem', sm: '1.25rem' },
+          p: { xs: 2, sm: 3 }
+        }}>
+          {program ? 'Edit Program' : 'Add New Program'}
+        </DialogTitle>
+        <DialogContent 
+          dividers
+          sx={{ p: { xs: 2, sm: 3 } }}
+        >
+          <Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mt: 0.5 }}>
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -424,13 +535,20 @@ const ProgramFormDialog: React.FC<ProgramFormDialogProps> = ({ open, onClose, on
                 required
                 margin="normal"
                 variant="outlined"
+                size={isMobile ? "small" : "medium"}
+                InputProps={{
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
+                InputLabelProps={{
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
                 fullWidth
                 multiline
-                rows={3}
+                rows={isMobile ? 2 : 3}
                 label="Description"
                 name="description"
                 value={formData.description}
@@ -438,6 +556,13 @@ const ProgramFormDialog: React.FC<ProgramFormDialogProps> = ({ open, onClose, on
                 required
                 margin="normal"
                 variant="outlined"
+                size={isMobile ? "small" : "medium"}
+                InputProps={{
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
+                InputLabelProps={{
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -449,6 +574,8 @@ const ProgramFormDialog: React.FC<ProgramFormDialogProps> = ({ open, onClose, on
                   onChange={(e) => handleChange(e as React.ChangeEvent<{ name?: string; value: unknown }>)}
                   label="Status"
                   required
+                  size={isMobile ? "small" : "medium"}
+                  sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
                 >
                   <MenuItem value="draft">Draft</MenuItem>
                   <MenuItem value="active">Active</MenuItem>
@@ -467,8 +594,13 @@ const ProgramFormDialog: React.FC<ProgramFormDialogProps> = ({ open, onClose, on
                 onChange={handleChange}
                 required
                 margin="normal"
+                size={isMobile ? "small" : "medium"}
+                InputProps={{
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
                 InputLabelProps={{
                   shrink: true,
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
                 }}
               />
             </Grid>
@@ -482,27 +614,40 @@ const ProgramFormDialog: React.FC<ProgramFormDialogProps> = ({ open, onClose, on
                 onChange={handleChange}
                 required
                 margin="normal"
+                size={isMobile ? "small" : "medium"}
+                InputProps={{
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
                 InputLabelProps={{
                   shrink: true,
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
                 }}
               />
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose} disabled={submitting}>Cancel</Button>
+        <DialogActions sx={{ p: { xs: 1.5, sm: 2 }, justifyContent: 'space-between' }}>
+          <Button 
+            onClick={onClose} 
+            disabled={submitting}
+            size={isMobile ? "small" : "medium"}
+          >
+            Cancel
+          </Button>
           <Button 
             type="submit" 
             variant="contained" 
             disabled={submitting}
+            size={isMobile ? "small" : "medium"}
             sx={{
               backgroundColor: '#E32845',
               '&:hover': {
                 backgroundColor: '#c41e3a',
               },
+              fontSize: { xs: '0.8rem', sm: '0.875rem' },
             }}
           >
-            {submitting ? 'Saving...' : (program ? 'Update' : 'Create')} Program
+            {submitting ? 'Saving...' : (program ? 'Update' : (isMobile ? 'Create' : 'Create Program'))}
           </Button>
         </DialogActions>
       </form>

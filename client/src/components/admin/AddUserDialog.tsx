@@ -11,6 +11,7 @@ import {
   IconButton,
   Typography,
   useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 
@@ -25,6 +26,7 @@ interface AddUserDialogProps {
 
 export default function AddUserDialog({ open, onClose, onAddUser, loading = false }: AddUserDialogProps) {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -94,21 +96,22 @@ export default function AddUserDialog({ open, onClose, onAddUser, loading = fals
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
+      fullScreen={isMobile}
       PaperProps={{
         sx: {
-          borderRadius: 2,
-          p: 1,
+          borderRadius: isMobile ? 0 : 2,
+          p: isMobile ? 0 : 1,
         },
       }}
     >
-      <DialogTitle>
+      <DialogTitle sx={{ p: isMobile ? 2 : 3 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h6" fontWeight={600}>
+          <Typography variant="h6" fontWeight={600} sx={{ fontSize: isMobile ? '1.1rem' : '1.25rem' }}>
             Add New User
           </Typography>
           <IconButton 
             onClick={handleClose}
-            size="small"
+            size={isMobile ? "small" : "medium"}
             sx={{
               color: 'text.secondary',
               '&:hover': {
@@ -116,13 +119,13 @@ export default function AddUserDialog({ open, onClose, onAddUser, loading = fals
               },
             }}
           >
-            <CloseIcon />
+            <CloseIcon fontSize={isMobile ? "small" : "medium"} />
           </IconButton>
         </Box>
       </DialogTitle>
       
       <form onSubmit={handleSubmit}>
-        <DialogContent dividers>
+        <DialogContent dividers sx={{ p: isMobile ? 2 : 3 }}>
           <Box display="flex" flexDirection="column" gap={3}>
             <TextField
               autoFocus
@@ -179,15 +182,17 @@ export default function AddUserDialog({ open, onClose, onAddUser, loading = fals
           </Box>
         </DialogContent>
         
-        <DialogActions sx={{ px: 3, py: 2 }}>
+        <DialogActions sx={{ px: isMobile ? 2 : 3, py: isMobile ? 1.5 : 2, flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 1 : 0 }}>
           <Button 
             onClick={handleClose}
             color="inherit"
             disabled={loading}
+            fullWidth={isMobile}
             sx={{
               borderRadius: 1,
               px: 2,
               py: 0.5,
+              order: isMobile ? 2 : 1,
             }}
           >
             Cancel
@@ -197,6 +202,7 @@ export default function AddUserDialog({ open, onClose, onAddUser, loading = fals
             variant="contained"
             color="primary"
             disabled={loading}
+            fullWidth={isMobile}
             sx={{
               borderRadius: 1,
               px: 3,
@@ -204,6 +210,7 @@ export default function AddUserDialog({ open, onClose, onAddUser, loading = fals
               textTransform: 'none',
               fontWeight: 600,
               boxShadow: 'none',
+              order: isMobile ? 1 : 2,
               '&:hover': {
                 boxShadow: 'none',
               },

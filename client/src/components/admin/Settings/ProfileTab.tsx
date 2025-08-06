@@ -16,6 +16,8 @@ import {
   InputAdornment,
   CircularProgress,
   Chip,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import Grid from '@/components/ui/Grid';
 import {
@@ -38,6 +40,9 @@ interface ProfileTabProps {
 }
 
 const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   const currentUser = useAppSelector((state) => state.auth.user);
   const dispatch = useAppDispatch();
 
@@ -306,10 +311,16 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
         onClose={() => setPasswordDialogOpen(false)}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            width: { xs: '95%', sm: '80%', md: '60%' },
+            p: { xs: 1, sm: 2 }
+          }
+        }}
       >
-        <DialogTitle>Change Password</DialogTitle>
+        <DialogTitle sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>Change Password</DialogTitle>
         <DialogContent>
-          <Grid container spacing={3} sx={{ mt: 1 }}>
+          <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -320,6 +331,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
                   ...passwordData, 
                   currentPassword: e.target.value 
                 })}
+                size={isMobile ? "small" : "medium"}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -345,6 +357,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
                   newPassword: e.target.value 
                 })}
                 helperText="Password must be at least 8 characters long"
+                size={isMobile ? "small" : "medium"}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -369,6 +382,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
                   ...passwordData, 
                   confirmPassword: e.target.value 
                 })}
+                size={isMobile ? "small" : "medium"}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -385,10 +399,11 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: { xs: 1.5, sm: 2 }, gap: { xs: 1, sm: 2 } }}>
           <Button
             onClick={() => setPasswordDialogOpen(false)}
             disabled={loading}
+            size={isMobile ? "small" : "medium"}
           >
             Cancel
           </Button>
@@ -396,8 +411,15 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
             onClick={handlePasswordChange}
             variant="contained"
             disabled={loading}
+            size={isMobile ? "small" : "medium"}
+            sx={{
+              backgroundColor: '#E32845',
+              '&:hover': {
+                backgroundColor: '#c41e3a',
+              },
+            }}
           >
-            {loading ? <CircularProgress size={20} /> : 'Change Password'}
+            {loading ? <CircularProgress size={isMobile ? 16 : 20} /> : (isMobile ? 'Change' : 'Change Password')}
           </Button>
         </DialogActions>
       </Dialog>

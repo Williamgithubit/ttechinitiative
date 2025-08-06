@@ -23,7 +23,7 @@ const images = [
 
 const HeroSection = () => {
   return (
-    <div className="bg-gradient-to-r from-[#000054] to-[#1a1a6e] text-white h-[100vh] pt-6">
+    <div className="bg-gradient-to-r from-[#000054] to-[#1a1a6e] text-white h-[100vh] w-full pt-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="mt-0 lg:mt-12">

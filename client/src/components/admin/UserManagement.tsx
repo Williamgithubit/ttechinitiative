@@ -8,6 +8,8 @@ import {
   Paper,
   Table,
   TableBody,
+  useMediaQuery,
+  useTheme,
   TableCell,
   TableContainer,
   TableHead,
@@ -67,18 +69,27 @@ interface UserFormDialogProps {
   isSubmitting: boolean;
 }
 
-const UserManagement: React.FC = () => {
+interface UserManagementProps {
+  openDialog?: boolean;
+  onCloseDialog?: () => void;
+}
+
+const UserManagement: React.FC<UserManagementProps> = ({ openDialog = false, onCloseDialog }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [openDialog, setOpenDialog] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
   const fetchUsers = async () => {
     try {
@@ -119,6 +130,17 @@ const UserManagement: React.FC = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  // Handle external dialog open request from parent component
+  useEffect(() => {
+    if (openDialog) {
+      handleOpenDialog();
+      // Call the parent's onCloseDialog to reset the state in the parent
+      if (onCloseDialog) {
+        onCloseDialog();
+      }
+    }
+  }, [openDialog, onCloseDialog]);
 
   const handleCreateUser = async (userData: CreateUserData) => {
     try {
@@ -165,11 +187,11 @@ const UserManagement: React.FC = () => {
 
   const handleOpenDialog = (user: User | null = null) => {
     setEditingUser(user);
-    setOpenDialog(true);
+    setDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
-    setOpenDialog(false);
+    setDialogOpen(false);
     setEditingUser(null);
     setError(null);
   };
@@ -279,13 +301,31 @@ const UserManagement: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h5" sx={{ color: '#000054', fontWeight: 'bold' }}>User Management</Typography>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' },
+        justifyContent: 'space-between', 
+        alignItems: { xs: 'stretch', sm: 'center' },
+        gap: { xs: 2, sm: 0 },
+        mb: 3 
+      }}>
+        <Typography 
+          variant="h5" 
+          sx={{ 
+            color: '#000054', 
+            fontWeight: 'bold',
+            fontSize: { xs: '1.25rem', sm: '1.5rem' }
+          }}
+        >
+          User Management
+        </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => handleOpenDialog()}
           disabled={isLoading}
+          fullWidth={useMediaQuery(theme.breakpoints.down('sm'))}
+          size={useMediaQuery(theme.breakpoints.down('sm')) ? 'small' : 'medium'}
           sx={{
             backgroundColor: '#E32845',
             '&:hover': {
@@ -305,14 +345,14 @@ const UserManagement: React.FC = () => {
 
       <Paper 
         sx={{ 
-          p: 2, 
+          p: { xs: 1.5, sm: 2 }, 
           mb: 3,
           background: 'white',
           borderRadius: 2,
           border: '1px solid rgba(0, 0, 84, 0.1)',
         }}
       >
-        <Grid container spacing={2}>
+        <Grid container spacing={{ xs: 1, sm: 2 }}>
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
@@ -388,7 +428,7 @@ const UserManagement: React.FC = () => {
         </Grid>
       </Paper>
 
-      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+      <Paper sx={{ width: '100%', overflow: 'hidden', borderRadius: 2 }}>
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
             <CircularProgress />
@@ -398,16 +438,16 @@ const UserManagement: React.FC = () => {
             <Typography>No users found</Typography>
           </Box>
         ) : (
-          <TableContainer>
-            <Table>
+          <TableContainer sx={{ overflowX: 'auto' }}>
+            <Table size={isMobile ? 'small' : 'medium'}>
               <TableHead>
                 <TableRow>
                   <TableCell>Name</TableCell>
                   <TableCell>Email</TableCell>
-                  <TableCell>Role</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Role</TableCell>
                   <TableCell>Status</TableCell>
-                  <TableCell>Last Login</TableCell>
-                  <TableCell>Actions</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Last Login</TableCell>
+                  <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -417,52 +457,86 @@ const UserManagement: React.FC = () => {
                     <TableRow key={user.id} hover>
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Avatar sx={{ width: 32, height: 32, mr: 1 }}>
+                          <Avatar sx={{ 
+                            width: { xs: 28, sm: 32 }, 
+                            height: { xs: 28, sm: 32 }, 
+                            mr: 1,
+                            fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                          }}>
                             {user.name.charAt(0)}
                           </Avatar>
-                          {user.name}
+                          <Typography 
+                            sx={{ 
+                              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              maxWidth: { xs: '80px', sm: '120px', md: '200px' }
+                            }}
+                          >
+                            {user.name}
+                          </Typography>
                         </Box>
                       </TableCell>
-                      <TableCell>{user.email}</TableCell>
                       <TableCell>
+                        <Typography 
+                          sx={{ 
+                            fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            maxWidth: { xs: '80px', sm: '120px', md: '200px' }
+                          }}
+                        >
+                          {user.email}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                         <Chip
                           label={user.role}
                           color={getRoleColor(user.role) as 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'}
                           size="small"
                           variant="outlined"
+                          sx={{ '& .MuiChip-label': { fontSize: { xs: '0.65rem', sm: '0.75rem' } } }}
                         />
                       </TableCell>
                       <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}>
                           {getStatusIcon(user.status)}
-                          <Box sx={{ ml: 1 }}>
-                            {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                          <Box sx={{ ml: 1, display: { xs: 'none', sm: 'block' } }}>
+                            <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                              {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                            </Typography>
                           </Box>
                         </Box>
                       </TableCell>
-                      <TableCell>
-                        {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}
+                      <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                        <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                          {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}
+                        </Typography>
                       </TableCell>
-                      <TableCell>
-                        <Tooltip title="Edit">
-                          <IconButton
-                            onClick={() => handleOpenDialog(user)}
-                            size="small"
-                            disabled={isSubmitting}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                          <IconButton
-                            onClick={() => handleDeleteUser(user.id)}
-                            color="error"
-                            size="small"
-                            disabled={isSubmitting}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                      <TableCell align="right">
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
+                          <Tooltip title="Edit">
+                            <IconButton
+                              onClick={() => handleOpenDialog(user)}
+                              size="small"
+                              sx={{ p: { xs: 0.5, sm: 1 } }}
+                            >
+                              <EditIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete">
+                            <IconButton 
+                              onClick={() => handleDeleteUser(user.id)} 
+                              color="error"
+                              size="small"
+                              sx={{ p: { xs: 0.5, sm: 1 } }}
+                            >
+                              <DeleteIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -482,7 +556,7 @@ const UserManagement: React.FC = () => {
       </Paper>
 
       <UserFormDialog
-        open={openDialog}
+        open={dialogOpen}
         onClose={handleCloseDialog}
         onSave={handleSaveUser}
         user={editingUser}
@@ -499,6 +573,8 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
   user,
   isSubmitting,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [formData, setFormData] = useState<CreateUserData>({
     email: user?.email || '',
     password: '',
@@ -589,11 +665,28 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={isSubmitting ? undefined : onClose} maxWidth="sm" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={isSubmitting ? undefined : onClose} 
+      maxWidth="sm" 
+      fullWidth
+      PaperProps={{
+        sx: {
+          width: { xs: '95%', sm: '80%', md: '600px' },
+          maxWidth: '100%',
+          m: { xs: 1, sm: 2 }
+        }
+      }}
+    >
       <form onSubmit={handleSubmit}>
-        <DialogTitle>{user ? 'Edit User' : 'Add New User'}</DialogTitle>
-        <DialogContent dividers>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
+        <DialogTitle sx={{ 
+          fontSize: { xs: '1.1rem', sm: '1.25rem' },
+          p: { xs: 2, sm: 3 }
+        }}>
+          {user ? 'Edit User' : 'Add New User'}
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: { xs: 2, sm: 3 } }}>
+          <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ mt: 0.5 }}>
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -670,19 +763,26 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose} disabled={isSubmitting}>
+        <DialogActions sx={{ p: { xs: 1.5, sm: 2 }, justifyContent: 'space-between' }}>
+          <Button 
+            onClick={onClose} 
+            disabled={isSubmitting}
+            size={isMobile ? "small" : "medium"}
+            sx={{ px: { xs: 2, sm: 3 } }}
+          >
             Cancel
           </Button>
           <Button 
             type="submit" 
             variant="contained" 
             disabled={isSubmitting}
+            size={isMobile ? "small" : "medium"}
             sx={{
               backgroundColor: '#E32845',
               '&:hover': {
                 backgroundColor: '#c41e3a',
               },
+              px: { xs: 2, sm: 3 }
             }}
           >
             {isSubmitting ? (

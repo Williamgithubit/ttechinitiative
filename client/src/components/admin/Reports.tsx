@@ -16,6 +16,8 @@ import {
   TableHead,
   TableRow,
   LinearProgress,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Refresh as RefreshIcon,
@@ -55,6 +57,9 @@ const formatDate = (date: Date | string | undefined): string => {
 };
 
 const Reports: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [engagementMetrics, setEngagementMetrics] = useState<Record<string, number> | null>(null);
   const [programPerformance, setProgramPerformance] = useState<Array<{
@@ -133,8 +138,25 @@ const Reports: React.FC = () => {
   return (
     <Box>
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" component="h2" sx={{ color: '#000054', fontWeight: 'bold' }}>
+      <Box 
+        sx={{
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          gap: { xs: 2, sm: 0 },
+          mb: 3
+        }}
+      >
+        <Typography 
+          variant="h5" 
+          component="h2" 
+          sx={{ 
+            color: '#000054', 
+            fontWeight: 'bold',
+            fontSize: { xs: '1.25rem', sm: '1.5rem' }
+          }}
+        >
           Reports & Analytics
         </Typography>
         <Button
@@ -142,6 +164,8 @@ const Reports: React.FC = () => {
           startIcon={<RefreshIcon />}
           onClick={loadReportsData}
           disabled={loading}
+          fullWidth={isMobile}
+          size={isMobile ? "small" : "medium"}
           sx={{
             borderColor: '#000054',
             color: '#000054',
@@ -151,7 +175,7 @@ const Reports: React.FC = () => {
             },
           }}
         >
-          Refresh Data
+          {isMobile ? "Refresh" : "Refresh Data"}
         </Button>
       </Box>
 
@@ -417,16 +441,16 @@ const Reports: React.FC = () => {
             <Typography variant="h6" gutterBottom>
               Program Performance
             </Typography>
-            <TableContainer>
-              <Table>
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table size={isMobile ? "small" : "medium"}>
                 <TableHead>
                   <TableRow>
                     <TableCell>Program Name</TableCell>
                     <TableCell>Status</TableCell>
-                    <TableCell>Start Date</TableCell>
-                    <TableCell>End Date</TableCell>
-                    <TableCell align="right">Enrollments</TableCell>
-                    <TableCell align="right">Completions</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Start Date</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>End Date</TableCell>
+                    <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Enrollments</TableCell>
+                    <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Completions</TableCell>
                     <TableCell align="right">Completion Rate</TableCell>
                     <TableCell align="right">Rating</TableCell>
                   </TableRow>
@@ -434,30 +458,43 @@ const Reports: React.FC = () => {
                 <TableBody>
                   {programPerformance.map((program, index) => (
                     <TableRow key={index}>
-                      <TableCell>{program.name}</TableCell>
+                      <TableCell sx={{ maxWidth: { xs: '120px', sm: '200px' }, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {program.name}
+                      </TableCell>
                       <TableCell>
                         <Chip
                           label={program.status}
                           color="default"
                           size="small"
+                          sx={{ fontSize: { xs: '0.7rem', sm: '0.8125rem' } }}
                         />
                       </TableCell>
-                      <TableCell>{program.startDate}</TableCell>
-                      <TableCell>{program.endDate}</TableCell>
-                      <TableCell align="right">{program.enrollments}</TableCell>
-                      <TableCell align="right">{program.completions}</TableCell>
+                      <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{program.startDate}</TableCell>
+                      <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{program.endDate}</TableCell>
+                      <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{program.enrollments}</TableCell>
+                      <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{program.completions}</TableCell>
                       <TableCell align="right">
-                        <Box display="flex" alignItems="center" justifyContent="flex-end">
+                        <Box sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'flex-end',
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                        }}>
                           <LinearProgress
                             variant="determinate"
                             value={program.completionRate || 0}
-                            sx={{ width: 60, mr: 1 }}
+                            sx={{ width: { xs: 40, sm: 60 }, mr: 1 }}
                           />
                           {program.completionRate || 0}%
                         </Box>
                       </TableCell>
                       <TableCell align="right">
-                        <Box display="flex" alignItems="center" justifyContent="flex-end">
+                        <Box sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'flex-end',
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                        }}>
                           ⭐ {program.rating || 0}
                         </Box>
                       </TableCell>

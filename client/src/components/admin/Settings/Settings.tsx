@@ -7,6 +7,8 @@ import {
   Tab,
   Alert,
   Button,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   AccountCircle as AccountIcon,
@@ -37,12 +39,15 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`settings-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      {value === index && <Box sx={{ p: { xs: 2, sm: 3 } }}>{children}</Box>}
     </div>
   );
 }
 
 const Settings: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   const [tabValue, setTabValue] = useState(0);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -69,14 +74,33 @@ const Settings: React.FC = () => {
   return (
     <Box>
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" component="h2" sx={{ color: '#000054', fontWeight: 'bold' }}>
+      <Box 
+        sx={{
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          gap: { xs: 2, sm: 0 },
+          mb: 3
+        }}
+      >
+        <Typography 
+          variant="h5" 
+          component="h2" 
+          sx={{ 
+            color: '#000054', 
+            fontWeight: 'bold',
+            fontSize: { xs: '1.25rem', sm: '1.5rem' }
+          }}
+        >
           Settings
         </Typography>
         <Button
           variant="outlined"
           startIcon={<RefreshIcon />}
           onClick={handleRefresh}
+          fullWidth={isMobile}
+          size={isMobile ? "small" : "medium"}
           sx={{
             borderColor: '#000054',
             color: '#000054',
@@ -86,7 +110,7 @@ const Settings: React.FC = () => {
             },
           }}
         >
-          Refresh
+          {isMobile ? "" : "Refresh"}
         </Button>
       </Box>
 
@@ -109,6 +133,7 @@ const Settings: React.FC = () => {
           background: 'white',
           borderRadius: 2,
           border: '1px solid rgba(0, 0, 84, 0.1)',
+          overflow: 'hidden',
         }}
       >
         <Tabs
@@ -119,6 +144,9 @@ const Settings: React.FC = () => {
           sx={{
             '& .MuiTab-root': {
               color: '#000054',
+              fontSize: { xs: '0.75rem', sm: '0.875rem', md: '1rem' },
+              minHeight: { xs: '48px', sm: '56px' },
+              padding: { xs: '6px 12px', sm: '12px 16px' },
               '&.Mui-selected': {
                 color: '#E32845',
               },
@@ -128,11 +156,11 @@ const Settings: React.FC = () => {
             },
           }}
         >
-          <Tab icon={<AccountIcon />} label="Profile" />
-          <Tab icon={<SecurityIcon />} label="Security" />
-          <Tab icon={<NotificationsIcon />} label="Notifications" disabled />
-          <Tab icon={<SettingsIcon />} label="System" disabled />
-          <Tab icon={<BusinessIcon />} label="Organization" disabled />
+          <Tab icon={<AccountIcon sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />} label="Profile" />
+          <Tab icon={<SecurityIcon sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />} label="Security" />
+          <Tab icon={<NotificationsIcon sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />} label="Notifications" disabled />
+          <Tab icon={<SettingsIcon sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />} label="System" disabled />
+          <Tab icon={<BusinessIcon sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />} label="Organization" disabled />
         </Tabs>
       </Paper>
 

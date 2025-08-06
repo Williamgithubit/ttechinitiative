@@ -13,8 +13,11 @@ import {
   ListItemIcon,
   Chip,
   Button,
-  Stack
+  Stack,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
+import Grid from '@/components/ui/Grid';
 import {
   People as PeopleIcon,
   School as SchoolIcon,
@@ -26,7 +29,6 @@ import {
   Refresh as RefreshIcon,
   Storage as StorageIcon,
 } from '@mui/icons-material';
-import Grid from '../ui/Grid';
 import { 
   fetchDashboardStats, 
   fetchRecentActivity, 
@@ -42,6 +44,9 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [seeding, setSeeding] = useState(false);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const loadDashboardData = async () => {
     try {
@@ -85,6 +90,7 @@ const Dashboard = () => {
     loadDashboardData();
   }, []);
 
+  // Activity icons
   const getActivityIcon = (type: RecentActivity['type']) => {
     switch (type) {
       case 'user_registered':
@@ -100,6 +106,7 @@ const Dashboard = () => {
     }
   };
 
+  // Activity colors
   const getActivityColor = (type: RecentActivity['type']) => {
     switch (type) {
       case 'user_registered':
@@ -115,6 +122,7 @@ const Dashboard = () => {
     }
   };
 
+  // Loading state
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -124,6 +132,7 @@ const Dashboard = () => {
     );
   }
 
+  // Error state
   if (error) {
     return (
       <Alert severity="error" sx={{ mb: 2 }}>
@@ -157,32 +166,44 @@ const Dashboard = () => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h4" component="h1" sx={{ color: '#000054', fontWeight: 'bold' }}>
-          Admin Dashboard
+      <Box 
+        display="flex" 
+        flexDirection={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between" 
+        alignItems={{ xs: 'stretch', sm: 'center' }} 
+        gap={2}
+        mb={2}>
+        <Typography variant="h5" component="h1" sx={{ 
+          fontWeight: 'bold', 
+          color: '#000054',
+          fontSize: { xs: '1.25rem', sm: '1.5rem' } 
+        }}>
+          Dashboard Overview
         </Typography>
-        <Stack direction="row" spacing={2}>
+        
+        <Stack 
+          direction={{ xs: 'column', sm: 'row' }} 
+          spacing={2} 
+          width={{ xs: '100%', sm: 'auto' }}
+        >
           <Button
-            variant="outlined"
             startIcon={<RefreshIcon />}
             onClick={handleRefresh}
+            variant="outlined"
             disabled={loading}
-            sx={{
-              borderColor: '#000054',
-              color: '#000054',
-              '&:hover': {
-                borderColor: '#1a1a6e',
-                backgroundColor: 'rgba(0, 0, 84, 0.04)',
-              },
-            }}
+            fullWidth={isMobile}
+            size={isMobile ? 'small' : 'medium'}
           >
             Refresh
           </Button>
+          
           <Button
-            variant="contained"
             startIcon={<StorageIcon />}
             onClick={handleSeedData}
+            variant="contained"
             disabled={loading || seeding}
+            fullWidth={isMobile}
+            size={isMobile ? 'small' : 'medium'}
             sx={{
               backgroundColor: '#E32845',
               '&:hover': {
@@ -195,7 +216,7 @@ const Dashboard = () => {
         </Stack>
       </Box>
       
-      <Grid container spacing={3} sx={{ mt: 2, mb: 4 }}>
+      <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mt: 2, mb: 4 }}>
         {statsCards.map((stat, index) => (
           <Grid key={index} xs={12} sm={6} md={3}>
             <Paper 
@@ -210,15 +231,32 @@ const Dashboard = () => {
                 <CardContent>
                   <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Box>
-                      <Typography color="rgba(255, 255, 255, 0.8)" gutterBottom>
+                      <Typography 
+                        color="rgba(255, 255, 255, 0.8)" 
+                        gutterBottom
+                        sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
+                      >
                         {stat.title}
                       </Typography>
-                      <Typography variant="h5" component="div" sx={{ color: 'white', fontWeight: 'bold' }}>
+                      <Typography 
+                        variant="h5" 
+                        component="div" 
+                        sx={{ 
+                          color: 'white', 
+                          fontWeight: 'bold',
+                          fontSize: { xs: '1.25rem', sm: '1.5rem' } 
+                        }}
+                      >
                         {stat.value}
                       </Typography>
                     </Box>
                     <Box sx={{ color: '#E32845' }}>
-                      {React.cloneElement(stat.icon, { sx: { color: '#E32845', fontSize: '2.5rem' } })}
+                      {React.cloneElement(stat.icon, { 
+                        sx: { 
+                          color: '#E32845', 
+                          fontSize: { xs: '2rem', sm: '2.5rem' } 
+                        } 
+                      })}
                     </Box>
                   </Box>
                 </CardContent>
@@ -228,33 +266,62 @@ const Dashboard = () => {
         ))}
       </Grid>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={{ xs: 2, sm: 3 }}>
         <Grid xs={12} md={8}>
           <Paper 
             elevation={2} 
             sx={{ 
-              p: 2, 
+              p: { xs: 1.5, sm: 2 }, 
               mb: 3,
               background: 'white',
               borderRadius: 2,
               border: '1px solid rgba(0, 0, 84, 0.1)',
+              overflow: 'hidden',
             }}
           >
-            <Typography variant="h6" gutterBottom sx={{ color: '#000054', fontWeight: 'bold' }}>
+            <Typography 
+              variant="h6" 
+              gutterBottom 
+              sx={{ 
+                color: '#000054', 
+                fontWeight: 'bold',
+                fontSize: { xs: '1rem', sm: '1.25rem' } 
+              }}
+            >
               Recent Activity
             </Typography>
             {recentActivity.length > 0 ? (
               <List>
                 {recentActivity.map((activity) => (
-                  <ListItem key={activity.id} divider>
-                    <ListItemIcon>
+                  <ListItem key={activity.id} divider sx={{ 
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    py: { xs: 1.5, sm: 1 },
+                    px: { xs: 1, sm: 2 },
+                    gap: { xs: 1, sm: 0 }
+                  }}>
+                    <ListItemIcon sx={{ 
+                      minWidth: { xs: '30px', sm: '40px' },
+                      mr: { xs: 0, sm: 1 }
+                    }}>
                       {getActivityIcon(activity.type)}
                     </ListItemIcon>
-                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                      <Typography variant="body1">
+                    <Box sx={{ 
+                      flex: 1, 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      gap: 0.5,
+                      width: { xs: '100%', sm: 'auto' }
+                    }}>
+                      <Typography variant="body1" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
                         {activity.description}
                       </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        gap: 1,
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        alignItems: { xs: 'flex-start', sm: 'center' }
+                      }}>
                         <Typography variant="caption" color="textSecondary">
                           {getTimeAgo(activity.timestamp)}
                         </Typography>
@@ -263,6 +330,7 @@ const Dashboard = () => {
                           size="small" 
                           color={getActivityColor(activity.type)}
                           variant="outlined"
+                          sx={{ maxWidth: { xs: '100%', sm: '120px' } }}
                         />
                       </Box>
                     </Box>
@@ -280,7 +348,7 @@ const Dashboard = () => {
           <Paper 
             elevation={2} 
             sx={{ 
-              p: 2,
+              p: { xs: 1.5, sm: 2 },
               background: 'white',
               borderRadius: 2,
               border: '1px solid rgba(0, 0, 84, 0.1)',

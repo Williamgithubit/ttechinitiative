@@ -31,6 +31,7 @@ import {
   Event as EventIcon,
   Article as ArticleIcon,
   Menu as MenuIcon,
+  MenuOpen as MenuOpenIcon,
   People as PeopleIcon,
   School as SchoolIcon,
   Add as AddIcon
@@ -63,6 +64,11 @@ export default function AdminDashboard() {
     message: '',
     severity: 'success' as 'success' | 'error' | 'info' | 'warning'
   });
+  // Add dialog state for each tab that needs it
+  const [userDialogOpen, setUserDialogOpen] = useState(false);
+  const [programDialogOpen, setProgramDialogOpen] = useState(false);
+  const [eventDialogOpen, setEventDialogOpen] = useState(false);
+  
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const dispatch = useAppDispatch();
@@ -83,8 +89,10 @@ export default function AdminDashboard() {
       height: '100vh',
       background: 'linear-gradient(135deg, #000054 0%, #1a1a6e 100%)',
       overflowY: 'auto',
+      width: { xs: '100%', sm: drawerWidth },
     }}>
-      <Toolbar sx={{ justifyContent: 'center', py: 2 }}>
+      {/* Logo */}
+      <Toolbar sx={{ justifyContent: 'center', py: 6, mt: { xs: 3, sm: 0 } }}>
         <Box 
           component="button"
           onClick={() => router.push('/')}
@@ -113,7 +121,9 @@ export default function AdminDashboard() {
           />
         </Box>
       </Toolbar>
+      {/* Divider */}
       <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)' }} />
+      {/* Navigation */}
       <List>
         {tabs.map(({ id, label, icon }) => (
           <ListItem key={id} disablePadding>
@@ -152,7 +162,8 @@ export default function AdminDashboard() {
           </ListItem>
         ))}
       </List>
-      <Box sx={{ mt: 'auto', p: 2 }}>
+      {/* Logout Button */}
+        <Box sx={{ mt: 'auto', p: 2 }}>
         <Button
           variant="outlined"
           startIcon={<ExitToAppIcon />}
@@ -187,7 +198,7 @@ export default function AdminDashboard() {
   );
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: { xs: 'column', md: 'row' } }}>
       <CssBaseline />
       <AppBar
         position="fixed"
@@ -198,48 +209,61 @@ export default function AdminDashboard() {
           borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
           background: 'linear-gradient(135deg, #000054 0%, #1a1a6e 100%)',
           color: 'white',
+          zIndex: (theme) => theme.zIndex.drawer + 1,
         }}
       >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { md: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {tabs.find(t => t.id === tab)?.label || 'Dashboard'}
-          </Typography>
-          {!isMobile && (
-            <Box>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => {
-                  // TODO: Implement add new functionality
-                  setSnackbar({ open: true, message: 'Add new functionality coming soon!', severity: 'info' });
-                }}
-                sx={{ 
-                  ml: 1,
-                  backgroundColor: '#E32845',
-                  '&:hover': {
-                    backgroundColor: '#c41e3a',
-                  },
-                }}
-              >
-                Add New
-              </Button>
-            </Box>
-          )}
+        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              edge="start"
+              onClick={handleDrawerToggle}
+              sx={{ mr: 2, display: { md: 'none' } }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" noWrap component="div" sx={{ 
+              flexGrow: 1,
+              fontSize: { xs: '1rem', sm: '1.25rem' } 
+            }}>
+              {tabs.find(t => t.id === tab)?.label || 'Dashboard'}
+            </Typography>
+          </Box>
+          <Box>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                // Open the appropriate dialog based on the active tab
+                switch (tab) {
+                  case 'users':
+                    setUserDialogOpen(true);
+                    break;
+                  case 'programs':
+                    setProgramDialogOpen(true);
+                    break;
+                  case 'events':
+                    setEventDialogOpen(true);
+                    break;
+                  default:
+                    setSnackbar({ open: true, message: `Add new ${tabs.find(t => t.id === tab)?.label || 'item'} functionality coming soon!`, severity: 'info' });
+                }
+              }}
+            >
+              {isMobile ? 'Add' : 'Add New'}
+            </Button>
+          </Box>
         </Toolbar>
       </AppBar>
 
       <Box
         component="nav"
-        sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
+        sx={{ 
+          width: { xs: '100%', md: drawerWidth }, 
+          flexShrink: { md: 0 },
+          zIndex: (theme) => theme.zIndex.drawer
+        }}
         aria-label="mailbox folders"
       >
         <Drawer
@@ -253,7 +277,7 @@ export default function AdminDashboard() {
             display: { xs: 'block', md: 'none' },
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
-              width: drawerWidth,
+              width: { xs: '80%', sm: drawerWidth },
               border: 'none',
               boxShadow: '2px 0 8px rgba(0,0,0,0.05)',
             },
@@ -283,18 +307,19 @@ export default function AdminDashboard() {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
-          width: { md: `calc(100% - ${drawerWidth}px)` },
-          mt: { xs: '64px', md: '64px' },
+          p: { xs: 2, sm: 3 },
+          width: { xs: '100%', md: `calc(100% - ${drawerWidth}px)` },
+          mt: { xs: '56px', sm: '64px' },
           background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-          minHeight: 'calc(100vh - 64px)',
+          minHeight: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
+          overflowX: 'hidden',
         }}
       >
         {tab === 'dashboard' && <Dashboard />}
-        {tab === 'users' && <UserManagement />}
-        {tab === 'programs' && <ProgramManagement />}
+        {tab === 'users' && <UserManagement openDialog={userDialogOpen} onCloseDialog={() => setUserDialogOpen(false)} />}
+        {tab === 'programs' && <ProgramManagement openDialog={programDialogOpen} onCloseDialog={() => setProgramDialogOpen(false)} />}
         {tab === 'reports' && <Reports />}
-        {tab === 'events' && <EventManagement />}
+        {tab === 'events' && <EventManagement openDialog={eventDialogOpen} onCloseDialog={() => setEventDialogOpen(false)} />}
         {tab === 'settings' && (
           <Settings />
         )}

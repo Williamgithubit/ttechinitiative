@@ -28,6 +28,9 @@ import {
   Card,
   CardContent,
   InputAdornment,
+  useMediaQuery,
+  useTheme,
+  Tooltip,
 } from '@mui/material';
 import Grid from '@/components/ui/Grid';
 import {
@@ -54,7 +57,15 @@ import {
 } from '@/services/eventService';
 import { seedEventData } from '@/utils/seedEventData';
 
-const EventManagement: React.FC = () => {
+interface EventManagementProps {
+  openDialog?: boolean;
+  onCloseDialog?: () => void;
+}
+
+const EventManagement: React.FC<EventManagementProps> = ({ openDialog = false, onCloseDialog }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,6 +110,17 @@ const EventManagement: React.FC = () => {
   useEffect(() => {
     loadEvents();
   }, []);
+  
+  // Handle external dialog open request from parent component
+  useEffect(() => {
+    if (openDialog) {
+      handleOpenDialog();
+      // Call the parent's onCloseDialog to reset the state in the parent
+      if (onCloseDialog) {
+        onCloseDialog();
+      }
+    }
+  }, [openDialog, onCloseDialog]);
 
   useEffect(() => {
     filterEvents();
@@ -276,16 +298,42 @@ const EventManagement: React.FC = () => {
   return (
     <Box>
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" component="h2" sx={{ color: '#000054', fontWeight: 'bold' }}>
+      <Box 
+        sx={{
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          gap: { xs: 2, sm: 0 },
+          mb: 3
+        }}
+      >
+        <Typography 
+          variant="h5" 
+          component="h2" 
+          sx={{ 
+            color: '#000054', 
+            fontWeight: 'bold',
+            fontSize: { xs: '1.25rem', sm: '1.5rem' }
+          }}
+        >
           Event Management
         </Typography>
-        <Box display="flex" gap={2}>
+        <Box 
+          sx={{
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: { xs: 1, sm: 2 },
+            width: { xs: '100%', sm: 'auto' }
+          }}
+        >
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
             onClick={loadEvents}
             disabled={loading}
+            fullWidth={isMobile}
+            size={isMobile ? "small" : "medium"}
             sx={{
               borderColor: '#000054',
               color: '#000054',
@@ -295,13 +343,15 @@ const EventManagement: React.FC = () => {
               },
             }}
           >
-            Refresh
+            {isMobile ? "" : "Refresh"}
           </Button>
           <Button
             variant="contained"
             startIcon={<StorageIcon />}
             onClick={handleSeedData}
             disabled={seeding}
+            fullWidth={isMobile}
+            size={isMobile ? "small" : "medium"}
             sx={{
               backgroundColor: '#000054',
               '&:hover': {
@@ -309,13 +359,15 @@ const EventManagement: React.FC = () => {
               },
             }}
           >
-            {seeding ? 'Seeding...' : 'Seed Sample Data'}
+            {seeding ? 'Seeding...' : (isMobile ? 'Seed Data' : 'Seed Sample Data')}
           </Button>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
             disabled={loading}
+            fullWidth={isMobile}
+            size={isMobile ? "small" : "medium"}
             sx={{
               backgroundColor: '#E32845',
               '&:hover': {
@@ -323,7 +375,7 @@ const EventManagement: React.FC = () => {
               },
             }}
           >
-            Add Event
+            {isMobile ? 'Add' : 'Add Event'}
           </Button>
         </Box>
       </Box>
@@ -399,20 +451,22 @@ const EventManagement: React.FC = () => {
       </Grid>
 
       {/* Filters */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Grid container spacing={3} alignItems="center">
+      <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
+        <Grid container spacing={{ xs: 2, sm: 3 }} alignItems="center">
           <Grid item xs={12} md={4}>
             <TextField
               fullWidth
               placeholder="Search events..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              size={isMobile ? "small" : "medium"}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon />
+                    <SearchIcon sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />
                   </InputAdornment>
                 ),
+                sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
               }}
             />
           </Grid>
@@ -423,6 +477,7 @@ const EventManagement: React.FC = () => {
                 value={statusFilter}
                 label="Status"
                 onChange={(e) => setStatusFilter(e.target.value)}
+                size={isMobile ? "small" : "medium"}
               >
                 <MenuItem value="all">All Statuses</MenuItem>
                 <MenuItem value="upcoming">Upcoming</MenuItem>
@@ -439,6 +494,7 @@ const EventManagement: React.FC = () => {
                 value={categoryFilter}
                 label="Category"
                 onChange={(e) => setCategoryFilter(e.target.value)}
+                size={isMobile ? "small" : "medium"}
               >
                 <MenuItem value="all">All Categories</MenuItem>
                 <MenuItem value="workshop">Workshop</MenuItem>
@@ -455,19 +511,18 @@ const EventManagement: React.FC = () => {
 
       {/* Events Table */}
       <Paper>
-        <TableContainer>
-          <Table>
+        <TableContainer sx={{ overflowX: 'auto' }}>
+          <Table size={isMobile ? "small" : "medium"}>
             <TableHead>
               <TableRow>
                 <TableCell>Event</TableCell>
-                <TableCell>Date & Time</TableCell>
-                <TableCell>Location</TableCell>
+                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Date & Time</TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Location</TableCell>
                 <TableCell>Status</TableCell>
-                <TableCell>Category</TableCell>
-                <TableCell align="right">Capacity</TableCell>
-                <TableCell align="right">Registrations</TableCell>
-                <TableCell align="right">Price</TableCell>
-                <TableCell align="center">Actions</TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Category</TableCell>
+                <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Capacity</TableCell>
+                <TableCell align="right" sx={{ display: { xs: 'none', lg: 'table-cell' } }}>Registrations</TableCell>
+                <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Price</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -476,35 +531,52 @@ const EventManagement: React.FC = () => {
                   <TableRow key={event.id}>
                     <TableCell>
                       <Box>
-                        <Typography variant="subtitle2" fontWeight="bold">
+                        <Typography 
+                          variant="subtitle2" 
+                          fontWeight="bold"
+                          sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+                        >
                           {event.title}
                         </Typography>
-                        <Typography variant="body2" color="textSecondary" noWrap>
-                          {event.description.length > 60 
-                            ? `${event.description.substring(0, 60)}...` 
+                        <Typography 
+                          variant="body2" 
+                          color="textSecondary" 
+                          noWrap
+                          sx={{ 
+                            fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                            maxWidth: { xs: '150px', sm: '200px', md: '300px' },
+                          }}
+                        >
+                          {event.description.length > (isMobile ? 30 : 60)
+                            ? `${event.description.substring(0, isMobile ? 30 : 60)}...` 
                             : event.description}
                         </Typography>
                       </Box>
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                       <Box>
-                        <Typography variant="body2">
+                        <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.8rem' } }}>
                           {formatDate(event.startDate)}
                         </Typography>
-                        <Typography variant="caption" color="textSecondary">
+                        <Typography variant="caption" color="textSecondary" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
                           to {formatDate(event.endDate)}
                         </Typography>
                       </Box>
                     </TableCell>
-                    <TableCell>{event.location}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{event.location}</TableCell>
                     <TableCell>
                       <Chip
-                        label={event.status}
-                        color={getStatusColor(event.status)}
+                        label={isMobile ? event.status.charAt(0).toUpperCase() : event.status.charAt(0).toUpperCase() + event.status.slice(1)}
                         size="small"
+                        sx={{
+                          backgroundColor: getStatusColor(event.status),
+                          color: '#fff',
+                          fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                          height: { xs: '20px', sm: '24px' },
+                        }}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                       <Chip
                         label={event.category}
                         color={getCategoryColor(event.category)}
@@ -512,42 +584,37 @@ const EventManagement: React.FC = () => {
                         size="small"
                       />
                     </TableCell>
-                    <TableCell align="right">{event.capacity}</TableCell>
-                    <TableCell align="right">
-                      <Box display="flex" alignItems="center" justifyContent="flex-end" gap={1}>
-                        <Typography variant="body2">
-                          {event.registrations}
-                        </Typography>
-                        <Typography variant="caption" color="textSecondary">
-                          ({Math.round((event.registrations / event.capacity) * 100)}%)
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell align="right">
+                    <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{event.capacity}</TableCell>
+                    <TableCell align="right" sx={{ display: { xs: 'none', lg: 'table-cell' } }}>{event.registrations || 0}</TableCell>
+                    <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                       <Typography variant="body2" fontWeight="bold">
                         {formatCurrency(event.price)}
                       </Typography>
                     </TableCell>
                     <TableCell align="center">
-                      <Box display="flex" gap={1}>
+                      <Box sx={{ display: 'flex', justifyContent: 'center', gap: { xs: 0, sm: 1 } }}>
                         <IconButton
-                          size="small"
+                          size={isMobile ? "small" : "medium"}
                           onClick={() => handleOpenDialog(event)}
-                          color="primary"
+                          sx={{ 
+                            color: '#000054',
+                            padding: { xs: 0.5, sm: 1 }
+                          }}
                         >
-                          <EditIcon />
+                          <EditIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
                         </IconButton>
                         <IconButton
-                          size="small"
+                          size={isMobile ? "small" : "medium"}
                           onClick={() => handleDelete(event.id)}
-                          color="error"
+                          sx={{ 
+                            color: '#E32845',
+                            padding: { xs: 0.5, sm: 1 }
+                          }}
                           disabled={deleting === event.id}
                         >
-                          {deleting === event.id ? (
-                            <CircularProgress size={16} />
-                          ) : (
-                            <DeleteIcon />
-                          )}
+                          {deleting === event.id ? 
+                            <CircularProgress size={isMobile ? 16 : 20} /> : 
+                            <DeleteIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />}
                         </IconButton>
                       </Box>
                     </TableCell>
@@ -570,30 +637,56 @@ const EventManagement: React.FC = () => {
       </Paper>
 
       {/* Add/Edit Event Dialog */}
-      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {editingEvent ? 'Edit Event' : 'Add New Event'}
+      <Dialog 
+        open={dialogOpen} 
+        onClose={handleCloseDialog} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            width: { xs: '95%', sm: '80%', md: '70%' },
+            maxWidth: { xs: '95%', sm: '80%', md: '800px' },
+            p: { xs: 1, sm: 2 }
+          }
+        }}
+      >
+        <DialogTitle sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+          {editingEvent ? 'Edit Event' : 'Create New Event'}
         </DialogTitle>
         <DialogContent>
-          <Grid container spacing={3} sx={{ mt: 1 }}>
+          <Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Event Title"
+                label="Title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
+                size={isMobile ? "small" : "medium"}
+                InputProps={{
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
+                InputLabelProps={{
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
                 fullWidth
                 label="Description"
-                multiline
-                rows={3}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                multiline
+                rows={isMobile ? 3 : 4}
                 required
+                size={isMobile ? "small" : "medium"}
+                InputProps={{
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
+                InputLabelProps={{
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -603,8 +696,15 @@ const EventManagement: React.FC = () => {
                 type="datetime-local"
                 value={formData.startDate.toISOString().slice(0, 16)}
                 onChange={(e) => setFormData({ ...formData, startDate: new Date(e.target.value) })}
-                InputLabelProps={{ shrink: true }}
+                InputLabelProps={{ 
+                  shrink: true,
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
                 required
+                size={isMobile ? "small" : "medium"}
+                InputProps={{
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -614,8 +714,15 @@ const EventManagement: React.FC = () => {
                 type="datetime-local"
                 value={formData.endDate.toISOString().slice(0, 16)}
                 onChange={(e) => setFormData({ ...formData, endDate: new Date(e.target.value) })}
-                InputLabelProps={{ shrink: true }}
+                InputLabelProps={{ 
+                  shrink: true,
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
                 required
+                size={isMobile ? "small" : "medium"}
+                InputProps={{
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
               />
             </Grid>
             <Grid item xs={12}>
@@ -625,6 +732,13 @@ const EventManagement: React.FC = () => {
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 required
+                size={isMobile ? "small" : "medium"}
+                InputProps={{
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
+                InputLabelProps={{
+                  sx: { fontSize: { xs: '0.875rem', sm: '1rem' } }
+                }}
               />
             </Grid>
             <Grid item xs={12} md={4}>
@@ -696,14 +810,26 @@ const EventManagement: React.FC = () => {
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
+        <DialogActions sx={{ p: { xs: 1.5, sm: 2 }, gap: { xs: 1, sm: 2 } }}>
+          <Button 
+            onClick={handleCloseDialog}
+            size={isMobile ? "small" : "medium"}
+          >
+            Cancel
+          </Button>
           <Button 
             onClick={handleSubmit} 
             variant="contained"
             disabled={!formData.title || !formData.description || !formData.location}
+            size={isMobile ? "small" : "medium"}
+            sx={{
+              backgroundColor: '#E32845',
+              '&:hover': {
+                backgroundColor: '#c41e3a',
+              },
+            }}
           >
-            {editingEvent ? 'Update Event' : 'Create Event'}
+            {editingEvent ? (isMobile ? 'Update' : 'Update Event') : (isMobile ? 'Create' : 'Create Event')}
           </Button>
         </DialogActions>
       </Dialog>

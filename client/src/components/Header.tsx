@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { RootState, useAppDispatch } from '@/store/store';
 import { performLogout } from '@/store/Auth/logoutAction';
 import { FaBars, FaTimes, FaUserCircle } from 'react-icons/fa';
+import { FaBarsStaggered } from "react-icons/fa6";
 import { FiLogIn, FiLogOut } from 'react-icons/fi';
 import Image from 'next/image';
 import logo from "../../public/assets/TTI-Logo-kHVWUz7q.png";
@@ -134,7 +135,7 @@ const Header = () => {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-[#E32845] bg-gray-50"
             >
-              {isMenuOpen ? <FaTimes className="h-6 w-6" /> : <FaBars className="h-6 w-6" />}
+              {isMenuOpen ? <FaTimes className="h-6 w-6" /> : <FaBarsStaggered className="h-6 w-6" />}
             </button>
           </div>
         </div>

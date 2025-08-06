@@ -91,7 +91,5 @@ export type AppDispatch = import('@reduxjs/toolkit').ThunkDispatch<
 
 // Extend the RootState to include all your state slices
 declare module 'react-redux' {
-  interface DefaultRootState extends RootState {
-    // Add any additional properties if needed
-  }
+  interface DefaultRootState extends RootState {}
 }

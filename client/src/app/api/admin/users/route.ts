@@ -1,37 +1,36 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
-import { getFirestore } from 'firebase-admin/firestore';
+import { adminAuth } from '@/lib/firebase-admin';
+import { getFirestore, DocumentData, QueryDocumentSnapshot, Firestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getApps } from 'firebase-admin/app';
+import { UserRecord, ListUsersResult } from 'firebase-admin/auth';
 
 // Configure runtime to use Node.js instead of Edge (required for Firebase Admin SDK)
 export const runtime = 'nodejs';
 
-// Initialize Firebase Admin if not already initialized
-if (!getApps().length) {
-  try {
-    // Parse the service account key from environment variable
-    const serviceAccountKey = process.env.NEXT_PUBLIC_FIREBASE_ADMIN_SDK_KEY;
-    if (!serviceAccountKey) {
-      throw new Error('Firebase Admin SDK key not found in environment variables');
-    }
-    
-    const serviceAccount = JSON.parse(serviceAccountKey);
-    
-    initializeApp({
-      credential: cert(serviceAccount)
-    });
-  } catch (error) {
-    console.error('Failed to initialize Firebase Admin SDK:', error);
-    throw error;
+// Get Firestore instance if Firebase Admin is initialized
+let db: Firestore | null = null;
+try {
+  if (getApps().length > 0) {
+    db = getFirestore();
   }
+} catch (error) {
+  console.error('Failed to get Firestore instance:', error);
+  db = null;
 }
-
-const db = getFirestore();
-const adminAuth = getAuth();
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if Firebase Admin SDK is available
+    if (!adminAuth || !db) {
+      return NextResponse.json({
+        error: 'Firebase Admin SDK not initialized',
+        message: 'Admin SDK is not available. Check environment variables.',
+        success: false
+      }, { status: 500 });
+    }
+
     // Get authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
@@ -59,13 +58,26 @@ export async function GET(request: NextRequest) {
     
     // Create a map of Firestore user data
     const firestoreUserMap = new Map();
-    firestoreUsers.forEach(doc => {
+    firestoreUsers.forEach((doc: QueryDocumentSnapshot<DocumentData>) => {
       firestoreUserMap.set(doc.id, doc.data());
     });
 
+    // Define interface for formatted user data
+    interface FormattedUser {
+      id: string;
+      email: string;
+      name: string;
+      role: string;
+      status: string;
+      lastLogin: string | null;
+      createdAt: string;
+      emailVerified: boolean;
+      photoURL: string | null;
+    }
+    
     // Format users for the frontend
-    const formattedUsers = listUsersResult.users.map(user => {
-      const firestoreData = firestoreUserMap.get(user.uid) || {};
+    const formattedUsers: FormattedUser[] = listUsersResult.users.map((user: UserRecord) => {
+      const firestoreData: Record<string, any> = firestoreUserMap.get(user.uid) || {};
       
       return {
         id: user.uid,
@@ -81,10 +93,10 @@ export async function GET(request: NextRequest) {
     });
 
     // Sort by creation date (newest first)
-    formattedUsers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    formattedUsers.sort((a: FormattedUser, b: FormattedUser) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return NextResponse.json(formattedUsers);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching users:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     const statusCode = errorMessage === 'Unauthorized' ? 401 : errorMessage === 'Forbidden' ? 403 : 500;
@@ -98,6 +110,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Firebase Admin SDK is available
+    if (!adminAuth || !db) {
+      return NextResponse.json({
+        error: 'Firebase Admin SDK not initialized',
+        message: 'Admin SDK is not available. Check environment variables.',
+        success: false
+      }, { status: 500 });
+    }
+
     // Get authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
@@ -158,7 +179,7 @@ export async function POST(request: NextRequest) {
       status: status || 'active',
       message: 'User created successfully'
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error creating user:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     let statusCode = 500;

@@ -84,14 +84,16 @@ const UserManagement: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // Get the current user's ID token
+      // Get the current user's ID token with force refresh to ensure latest claims
       const currentUser = auth.currentUser;
       if (!currentUser) {
         throw new Error('User not authenticated');
       }
       
-      const idToken = await currentUser.getIdToken();
+      // Force refresh the token to ensure we have the latest claims
+      const idToken = await currentUser.getIdToken(true);
       
+      console.log('Fetching users with refreshed token');
       const response = await fetch('/api/admin/users', {
         headers: {
           'Authorization': `Bearer ${idToken}`,
@@ -122,14 +124,16 @@ const UserManagement: React.FC = () => {
     try {
       setIsSubmitting(true);
       
-      // Get the current user's ID token
+      // Get the current user's ID token with force refresh to ensure latest claims
       const currentUser = auth.currentUser;
       if (!currentUser) {
         throw new Error('User not authenticated');
       }
       
-      const idToken = await currentUser.getIdToken();
+      // Force refresh the token to ensure we have the latest claims
+      const idToken = await currentUser.getIdToken(true);
       
+      console.log('Creating user with refreshed token');
       const response = await fetch('/api/admin/users', {
         method: 'POST',
         headers: {

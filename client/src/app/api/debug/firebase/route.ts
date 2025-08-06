@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import { adminAuth } from '@/lib/firebase-admin';
+import { UserRecord } from 'firebase-admin/auth';
 
 export async function GET(request: NextRequest) {
   try {
     console.log('Testing Firebase Admin SDK...');
+    
+    // Check if adminAuth is available
+    if (!adminAuth) {
+      return NextResponse.json({
+        error: 'Firebase Admin SDK not initialized',
+        message: 'Admin SDK is not available. Check environment variables.',
+        success: false
+      }, { status: 500 });
+    }
     
     // Test Firebase Admin SDK without authentication
     const listUsersResult = await adminAuth.listUsers(5); // Limit to 5 users for testing
@@ -12,7 +22,7 @@ export async function GET(request: NextRequest) {
     console.log('Firebase Admin SDK working! Found users:', listUsersResult.users.length);
     
     // Format users for the frontend
-    const formattedUsers = listUsersResult.users.map(user => ({
+    const formattedUsers = listUsersResult.users.map((user: UserRecord) => ({
       id: user.uid,
       email: user.email || '',
       name: user.displayName || user.email?.split('@')[0] || 'User',

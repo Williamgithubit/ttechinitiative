@@ -89,7 +89,7 @@ const Header = () => {
                 {isProfileDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                     <Link
-                      href="/profile"
+                      href={role === 'teacher' ? '/dashboard/teacher/profile' : '/profile'}
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setIsProfileDropdownOpen(false)}
                     >
@@ -102,6 +102,15 @@ const Header = () => {
                         onClick={() => setIsProfileDropdownOpen(false)}
                       >
                         Admin Dashboard
+                      </Link>
+                    )}
+                    {role === 'teacher' && (
+                      <Link
+                        href="/dashboard/teacher"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsProfileDropdownOpen(false)}
+                      >
+                        Teacher Dashboard
                       </Link>
                     )}
                     <button
@@ -165,7 +174,7 @@ const Header = () => {
                     </div>
                   </div>
                   <Link
-                    href="/profile"
+                    href={role === 'teacher' ? '/dashboard/teacher/profile' : '/profile'}
                     onClick={() => {
                       setIsMenuOpen(false);
                       setIsProfileDropdownOpen(false);
@@ -184,6 +193,18 @@ const Header = () => {
                       className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
                     >
                       Admin Dashboard
+                    </Link>
+                  )}
+                  {role === 'teacher' && (
+                    <Link
+                      href="/dashboard/teacher"
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        setIsProfileDropdownOpen(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+                    >
+                      Teacher Dashboard
                     </Link>
                   )}
                   <button

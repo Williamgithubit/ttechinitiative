@@ -13,7 +13,7 @@ interface ImageSliderProps {
   interval?: number;
 }
 
-const ImageSlider = ({ images, interval = 4000 }: ImageSliderProps) => {
+const ImageSlider = ({ images, interval = 30000 }: ImageSliderProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
 

@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { Providers } from "@/providers/providers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ScrollToTop from "@/components/ui/ScrollToTop";
 
 // This component is used to wrap the application with client-side only components
 export function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -21,6 +22,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <Footer />
+      <ScrollToTop />
     </Providers>
   );
 }

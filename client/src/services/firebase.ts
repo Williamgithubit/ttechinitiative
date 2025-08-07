@@ -51,7 +51,7 @@ console.log('Environment variables check:', {
 });
 
 // Debug: Log actual API key value (first 20 chars for security)
-console.log('Actual API key being used:', process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.substring(0, 20) + '...');
+// console.log('Actual API key being used:', process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.substring(0, 20) + '...');
 console.log('Expected API key should start with: AIzaSyC0GbSCZoIkEz1Y...');
 
 // Initialize Firebase

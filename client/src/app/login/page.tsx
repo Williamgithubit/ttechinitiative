@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FaUser, FaLock, FaArrowRight, FaSpinner } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { login as loginAction, login, selectCurrentUser, selectAuthError, selectIsAuthenticated, selectAuthLoading } from '@/store/Auth/authSlice';
 import { User, UserRole, LoginCredentials } from '@/types/auth';
 import { useAppDispatch, useAppSelector, AppDispatch } from '@/store/store';
@@ -15,7 +16,6 @@ const Login = () => {
     email: '',
     password: ''
   });
-  const [error, setError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -27,18 +27,21 @@ const Login = () => {
   useEffect(() => {
     console.log('Auth state changed - user:', user, 'authError:', authError);
     
-    // If there was an auth error, stop loading
+    // If there was an auth error, stop loading and show toast
     if (authError) {
       console.log('Auth error detected:', authError);
       setIsSubmitting(false);
-      setError(authError);
+      toast.error(authError);
       return;
     }
     
-    // If user is authenticated, redirect
+    // If user is authenticated, show success toast and redirect
     if (user) {
       console.log('User is authenticated, user:', user);
       console.log('User role:', user.role);
+      
+      // Show success toast
+      toast.success(`Welcome back, ${user.name || user.email}!`);
       
       // Get the redirect path based on user role
       const redirectPath = getRedirectPath(user.role);
@@ -53,7 +56,7 @@ const Login = () => {
           console.log('Executing navigation to:', redirectPath);
           router.push(redirectPath);
         }
-      }, 0);
+      }, 1000); // Slight delay to show the success toast
       
       return () => clearTimeout(timer);
     }
@@ -76,12 +79,7 @@ const Login = () => {
     }
   };
 
-  // Handle auth errors
-  useEffect(() => {
-    if (authError) {
-      setError(authError);
-    }
-  }, [authError]);
+
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -89,8 +87,8 @@ const Login = () => {
       ...prev,
       [name]: value
     }));
-    // Clear error when user starts typing
-    if (error) setError('');
+    // Clear any existing toasts when user starts typing
+    toast.dismiss();
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -103,13 +101,13 @@ const Login = () => {
       return;
     }
     
-    // Clear previous errors
-    setError('');
+    // Clear previous toast messages
+    toast.dismiss();
     
     // Basic validation
     if (!formData.email.trim() || !formData.password) {
       console.log('Validation failed: Empty fields');
-      setError('Please fill in all fields');
+      toast.error('Please fill in all fields');
       return;
     }
 
@@ -117,7 +115,7 @@ const Login = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       console.log('Validation failed: Invalid email format');
-      setError('Please enter a valid email address');
+      toast.error('Please enter a valid email address');
       return;
     }
     
@@ -144,7 +142,7 @@ const Login = () => {
     } catch (err) {
       console.error('Login error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Login failed. Please check your credentials.';
-      setError(errorMessage);
+      toast.error(errorMessage);
       setIsSubmitting(false);
     }
   };
@@ -165,12 +163,6 @@ const Login = () => {
         
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 sm:p-8">
-          {error && (
-            <div className="mb-6 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-          
           {/* Email Field */}
           <div className="mb-6">
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">

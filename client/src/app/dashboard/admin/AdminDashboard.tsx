@@ -2,8 +2,10 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { performLogout } from '@/store/Auth/logoutAction';
-import { useAppDispatch } from '@/store/store';
+import { useAppDispatch, useAppSelector } from '@/store/store';
+import { selectAuthState } from '@/store/Auth/authSlice';
 import Image from 'next/image';
+import { CiMenuFries } from "react-icons/ci";
 import {
   Box,
   Drawer,
@@ -73,6 +75,7 @@ export default function AdminDashboard() {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const { user } = useAppSelector(selectAuthState);
 
   const handleSnackbarClose = () => {
     setSnackbar({ ...snackbar, open: false });
@@ -92,7 +95,14 @@ export default function AdminDashboard() {
       width: { xs: '100%', sm: drawerWidth },
     }}>
       {/* Logo */}
-      <Toolbar sx={{ justifyContent: 'center', py: 6, mt: { xs: 3, sm: 0 } }}>
+      <Toolbar sx={{ 
+        justifyContent: 'center', 
+        py: { xs: 2, sm: 3 }, 
+        mt: { xs: 2, sm: 3 },
+        minHeight: { xs: '60px', sm: '70px' },
+        flexDirection: 'column',
+        gap: 1
+      }}>
         <Box 
           component="button"
           onClick={() => router.push('/')}
@@ -113,13 +123,15 @@ export default function AdminDashboard() {
           <Image
             src="/assets/TTI-Logo-kHVWUz7q.png"
             alt="T-Tech Initiative Logo"
-            width={100}
-            height={40}
+            width={isMobile ? 70 : 85}
+            height={isMobile ? 28 : 34}
             style={{
               objectFit: 'contain',
             }}
           />
         </Box>
+        
+
       </Toolbar>
       {/* Divider */}
       <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)' }} />
@@ -172,8 +184,8 @@ export default function AdminDashboard() {
             color: 'white',
             borderColor: 'rgba(255, 255, 255, 0.3)',
             '&:hover': {
-              borderColor: '#E32845',
-              backgroundColor: 'rgba(227, 40, 69, 0.1)',
+              borderColor: 'white',
+              backgroundColor: '#E32845',
             },
           }}
           onClick={async () => {
@@ -221,7 +233,8 @@ export default function AdminDashboard() {
               onClick={handleDrawerToggle}
               sx={{ mr: 2, display: { md: 'none' } }}
             >
-              <MenuIcon />
+              {/* Mobile Icons */}
+              <CiMenuFries />
             </IconButton>
             <Typography variant="h6" noWrap component="div" sx={{ 
               flexGrow: 1,
@@ -230,7 +243,23 @@ export default function AdminDashboard() {
               {tabs.find(t => t.id === tab)?.label || 'Dashboard'}
             </Typography>
           </Box>
-          <Box>
+          
+          {/* User Name in Header */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {user && (
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'white',
+                  fontWeight: 500,
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  display: { xs: 'none', sm: 'block' },
+                  opacity: 0.9
+                }}
+              >
+                {user.displayName || user.email?.split('@')[0] || 'User'}
+              </Typography>
+            )}
             <Button
               variant="contained"
               startIcon={<AddIcon />}

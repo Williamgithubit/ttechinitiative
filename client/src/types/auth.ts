@@ -9,15 +9,11 @@ export interface LoginCredentials {
   password: string;
 }
 
-// Firestore timestamp type
-export type FirestoreTimestamp = {
-  seconds: number;
-  nanoseconds: number;
-  toDate: () => Date;
-  toMillis: () => number;
-  isEqual: (other: FirestoreTimestamp) => boolean;
-  valueOf: () => string;
-};
+// Import Firebase Timestamp type
+import { Timestamp } from 'firebase/firestore';
+
+// Use Firebase's Timestamp directly
+export type FirestoreTimestamp = Timestamp;
 
 // Define the user interface
 export interface User {

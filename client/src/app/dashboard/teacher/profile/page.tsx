@@ -63,6 +63,7 @@ const TeacherProfilePage = () => {
   const [photoUploading, setPhotoUploading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -110,14 +111,63 @@ const TeacherProfilePage = () => {
     loadProfile();
   }, [user]);
 
+  // Validation functions
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone: string): boolean => {
+    const phoneRegex = /^[\+]?[1-9][\d]{0,2}[\s\-]?[\(]?[\d]{1,3}[\)]?[\s\-]?[\d]{3,4}[\s\-]?[\d]{3,4}$/;
+    return phone === '' || phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''));
+  };
+
+  const validateForm = (): boolean => {
+    const errors: {[key: string]: string} = {};
+
+    // Required field validations
+    if (!profile.displayName.trim()) {
+      errors.displayName = 'Full name is required';
+    }
+
+    if (!profile.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!validateEmail(profile.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    if (!profile.department.trim()) {
+      errors.department = 'Department is required';
+    }
+
+    // Optional field validations
+    if (profile.phone && !validatePhone(profile.phone)) {
+      errors.phone = 'Please enter a valid phone number';
+    }
+
+    if (profile.yearsExperience < 0) {
+      errors.yearsExperience = 'Years of experience cannot be negative';
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSave = async () => {
     if (!user?.uid) {
       setError('User not authenticated');
       return;
     }
 
+    // Validate form before saving
+    if (!validateForm()) {
+      setError('Please fix the validation errors before saving');
+      return;
+    }
+
     setLoading(true);
     setError(null);
+    setValidationErrors({});
     
     try {
       await TeacherProfileService.updateProfile(user.uid, {
@@ -204,6 +254,15 @@ const TeacherProfilePage = () => {
       ...prev,
       [field]: value
     }));
+    
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   if (!user) {

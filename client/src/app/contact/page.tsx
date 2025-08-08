@@ -32,6 +32,9 @@ const Contact = () => {
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [submitMessage, setSubmitMessage] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -67,7 +70,7 @@ const Contact = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const formErrors = validateForm();
@@ -76,14 +79,42 @@ const Contact = () => {
       return;
     }
     
-    // In a real app, this would make an API call
-    alert('Form submitted successfully! We will contact you soon.');
-    setFormData({
-      name: '',
-      email: '',
-      subject: '',
-      message: ''
-    });
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+    setSubmitMessage('');
+    
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        setSubmitStatus('success');
+        setSubmitMessage('Thank you for your message! We will get back to you within 24-48 hours.');
+        setFormData({
+          name: '',
+          email: '',
+          subject: '',
+          message: ''
+        });
+        setErrors({});
+      } else {
+        setSubmitStatus('error');
+        setSubmitMessage(result.error || 'Failed to send message. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setSubmitStatus('error');
+      setSubmitMessage('Network error. Please check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -113,7 +144,7 @@ const Contact = () => {
                 },
                 { 
                   title: 'Phone', 
-                  content: '+231 XXX XXXX',
+                  content: '+231-778-711-864 /555-760-0690',
                   icon: <HiPhone className="text-2xl text-[#E32845] mt-1 flex-shrink-0" />
                 }
               ].map((contact, index) => (
@@ -239,8 +270,28 @@ const Contact = () => {
                   {errors.message && <p className="mt-1 text-sm text-red-600">{errors.message}</p>}
                 </div>
                 
-                <Button type="submit" fullWidth size="lg">
-                  Send Message
+                {/* Status Message */}
+                {submitStatus !== 'idle' && (
+                  <div className={`p-4 rounded-md ${
+                    submitStatus === 'success' 
+                      ? 'bg-green-50 border border-green-200' 
+                      : 'bg-red-50 border border-red-200'
+                  }`}>
+                    <p className={`text-sm ${
+                      submitStatus === 'success' ? 'text-green-800' : 'text-red-800'
+                    }`}>
+                      {submitMessage}
+                    </p>
+                  </div>
+                )}
+                
+                <Button 
+                  type="submit" 
+                  fullWidth 
+                  size="lg"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
                 </Button>
               </form>
             </div>

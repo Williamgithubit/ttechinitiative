@@ -1,4 +1,4 @@
-import { FirestoreTimestamp } from './common';
+import { FirestoreTimestamp } from './auth';
 
 export interface AttendanceRecord {
   id: string;

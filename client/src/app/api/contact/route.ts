@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
               </p>
               
               <p style="color: #333; line-height: 1.6;">
-                In the meantime, feel free to explore our website to learn more about our programs and initiatives.
+                In the meantime, feel free to explore our website https://ttechinitiative.onrender.com to learn more about our programs and initiatives.
               </p>
               
               <p style="color: #333; line-height: 1.6; margin-bottom: 0;">

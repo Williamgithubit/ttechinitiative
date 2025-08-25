@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FiHome, FiUsers, FiCalendar, FiSettings, FiLogOut, FiBook, FiUser, FiMessageSquare } from 'react-icons/fi';
+import { FiHome, FiUsers, FiCalendar, FiSettings, FiLogOut, FiBook, FiUser, FiMessageSquare, FiAward } from 'react-icons/fi';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/services/firebase';
 import { useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearUser, selectCurrentUser } from '@/store/Auth/authSlice';
+import toast from 'react-hot-toast';
 
 const AdminSidebar = () => {
   const pathname = usePathname();
@@ -19,9 +20,17 @@ const AdminSidebar = () => {
     try {
       await signOut(auth);
       dispatch(clearUser());
+      toast.success('Successfully logged out!', {
+        duration: 2000,
+        position: 'top-right',
+      });
       router.push('/login');
     } catch (error) {
       console.error('Error signing out:', error);
+      toast.error('Error signing out. Please try again.', {
+        duration: 3000,
+        position: 'top-right',
+      });
     }
   };
 
@@ -67,6 +76,7 @@ const AdminSidebar = () => {
               <FiBook className="mr-3 h-5 w-5" />
               Programs
             </Link>
+            
             
             <Link
               href="/dashboard/events"

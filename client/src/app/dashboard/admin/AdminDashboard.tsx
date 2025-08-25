@@ -36,7 +36,8 @@ import {
   MenuOpen as MenuOpenIcon,
   People as PeopleIcon,
   School as SchoolIcon,
-  Add as AddIcon
+  Add as AddIcon,
+  EmojiEvents as CertificateIcon
 } from '@mui/icons-material';
 
 // Import Admin Components
@@ -46,6 +47,7 @@ import EventManagement from '@/components/admin/EventManagement/EventManagement'
 import Settings from '@/components/admin/Settings/Settings';
 import Dashboard from '@/components/admin/Dashboard';
 import Reports from '@/components/admin/Reports';
+import Certificate from '@/components/admin/Certificate';
 
 const drawerWidth = 240;
 
@@ -53,6 +55,7 @@ const tabs = [
   { id: 'dashboard', label: 'Dashboard', icon: <InsertChartIcon /> },
   { id: 'users', label: 'User Management', icon: <PeopleIcon /> },
   { id: 'programs', label: 'Programs', icon: <SchoolIcon /> },
+  { id: 'certificates', label: 'Certificates', icon: <CertificateIcon /> },
   { id: 'reports', label: 'Reports', icon: <ArticleIcon /> },
   { id: 'events', label: 'Events', icon: <EventIcon /> },
   { id: 'settings', label: 'Settings', icon: <SettingsIcon /> },
@@ -70,6 +73,7 @@ export default function AdminDashboard() {
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [programDialogOpen, setProgramDialogOpen] = useState(false);
   const [eventDialogOpen, setEventDialogOpen] = useState(false);
+  const [certificateDialogOpen, setCertificateDialogOpen] = useState(false);
   
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -275,6 +279,9 @@ export default function AdminDashboard() {
                   case 'events':
                     setEventDialogOpen(true);
                     break;
+                  case 'certificates':
+                    setCertificateDialogOpen(true);
+                    break;
                   default:
                     setSnackbar({ open: true, message: `Add new ${tabs.find(t => t.id === tab)?.label || 'item'} functionality coming soon!`, severity: 'info' });
                 }
@@ -347,6 +354,7 @@ export default function AdminDashboard() {
         {tab === 'dashboard' && <Dashboard />}
         {tab === 'users' && <UserManagement openDialog={userDialogOpen} onCloseDialog={() => setUserDialogOpen(false)} />}
         {tab === 'programs' && <ProgramManagement openDialog={programDialogOpen} onCloseDialog={() => setProgramDialogOpen(false)} />}
+        {tab === 'certificates' && <Certificate />}
         {tab === 'reports' && <Reports />}
         {tab === 'events' && <EventManagement openDialog={eventDialogOpen} onCloseDialog={() => setEventDialogOpen(false)} />}
         {tab === 'settings' && (

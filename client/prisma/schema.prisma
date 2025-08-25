@@ -68,3 +68,17 @@ model PasswordResetToken {
 
   @@index([email])
 }
+
+model Certificate {
+  id               String   @id @default(cuid())
+  certificateNumber String   @unique
+  studentName      String
+  program          String
+  graduationYear   Int
+  status           String   @default("valid") // valid, revoked, expired
+  issuedDate       DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([certificateNumber])
+}

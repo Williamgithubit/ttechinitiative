@@ -28,6 +28,7 @@ import {
   Schedule as ScheduleIcon,
   Refresh as RefreshIcon,
   Storage as StorageIcon,
+  CardMembership as CertificateIcon,
 } from '@mui/icons-material';
 import { 
   fetchDashboardStats, 
@@ -156,6 +157,11 @@ const Dashboard = () => {
       title: 'Upcoming Events', 
       value: stats?.upcomingEvents?.toString() || '0', 
       icon: <EventIcon fontSize="large" color="success" /> 
+    },
+    { 
+      title: 'Total Certificates', 
+      value: stats?.totalCertificates?.toLocaleString() || '0', 
+      icon: <CertificateIcon fontSize="large" color="warning" /> 
     },
     { 
       title: 'Tasks Completed', 

@@ -98,7 +98,7 @@ const CertificateVerificationForm: React.FC = () => {
           <FormInput
             label="Certificate Number"
             id="certificateNumber"
-            placeholder="Enter your certificate number (e.g., TTECH-2024-001)"
+            placeholder="Enter your certificate number (e.g., TTECH-2025-001)"
             error={errors.certificateNumber?.message}
             {...register('certificateNumber', {
               required: 'Certificate number is required',
@@ -153,7 +153,7 @@ const CertificateVerificationForm: React.FC = () => {
                 <div className="flex items-center mb-4">
                   <FiCheckCircle className="text-green-600 mr-3" size={24} />
                   <h3 className="text-lg font-semibold text-green-800">
-                    ✅ Certificate Verified
+                     Certificate Verified
                   </h3>
                 </div>
                 

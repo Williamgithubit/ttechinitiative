@@ -1,9 +1,9 @@
-'use client';
-import React, { useState, useEffect } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import FormInput from '@/components/ui/FormInput';
+"use client";
+import React, { useState, useEffect } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import FormInput from "@/components/ui/FormInput";
 import {
   addCertificate,
   getAllCertificates,
@@ -11,9 +11,16 @@ import {
   updateCertificate,
   deleteCertificate,
   FirebaseCertificate,
-  CertificateFormData
-} from '@/services/firebaseCertificateService';
-import { FiEye, FiEdit2, FiTrash2, FiCheckCircle, FiXCircle } from 'react-icons/fi';
+  CertificateFormData,
+} from "@/services/firebaseCertificateService";
+import {
+  FiEye,
+  FiEdit2,
+  FiTrash2,
+  FiCheckCircle,
+  FiXCircle,
+  FiLoader
+} from "react-icons/fi";
 
 interface FormErrors {
   fullName?: string;
@@ -27,12 +34,12 @@ interface FormErrors {
 const Certificate = () => {
   // Form state
   const [formData, setFormData] = useState<CertificateFormData>({
-    fullName: '',
-    certificateNumber: '',
-    program: '',
+    fullName: "",
+    certificateNumber: "",
+    program: "",
     yearOfCompletion: new Date().getFullYear(),
-    status: 'Valid',
-    studentImage: undefined
+    status: "Valid",
+    studentImage: undefined,
   });
 
   // UI state
@@ -40,12 +47,15 @@ const Certificate = () => {
   const [loading, setLoading] = useState(false);
   const [loadingList, setLoadingList] = useState(true);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [imagePreview, setImagePreview] = useState<string>('');
-  
+  const [imagePreview, setImagePreview] = useState<string>("");
+
   // Edit/View/Delete state
-  const [editingCertificate, setEditingCertificate] = useState<FirebaseCertificate | null>(null);
-  const [viewingCertificate, setViewingCertificate] = useState<FirebaseCertificate | null>(null);
-  const [deletingCertificate, setDeletingCertificate] = useState<FirebaseCertificate | null>(null);
+  const [editingCertificate, setEditingCertificate] =
+    useState<FirebaseCertificate | null>(null);
+  const [viewingCertificate, setViewingCertificate] =
+    useState<FirebaseCertificate | null>(null);
+  const [deletingCertificate, setDeletingCertificate] =
+    useState<FirebaseCertificate | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
   // Load certificates on component mount
@@ -59,8 +69,8 @@ const Certificate = () => {
       const data = await getAllCertificates();
       setCertificates(data);
     } catch (error) {
-      console.error('Error loading certificates:', error);
-      toast.error('Failed to load certificates');
+      console.error("Error loading certificates:", error);
+      toast.error("Failed to load certificates");
     } finally {
       setLoadingList(false);
     }
@@ -71,43 +81,54 @@ const Certificate = () => {
 
     // Full Name validation
     if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
+      newErrors.fullName = "Full name is required";
     }
 
     // Certificate Number validation
     if (!formData.certificateNumber.trim()) {
-      newErrors.certificateNumber = 'Certificate number is required';
+      newErrors.certificateNumber = "Certificate number is required";
     } else if (formData.certificateNumber.length < 3) {
-      newErrors.certificateNumber = 'Certificate number must be at least 3 characters';
+      newErrors.certificateNumber =
+        "Certificate number must be at least 3 characters";
     }
 
     // Program validation
     if (!formData.program.trim()) {
-      newErrors.program = 'Program/Department is required';
+      newErrors.program = "Program/Department is required";
     }
 
     // Year validation
     const currentYear = new Date().getFullYear();
-    if (formData.yearOfCompletion < 1900 || formData.yearOfCompletion > currentYear + 10) {
-      newErrors.yearOfCompletion = `Year must be between 1900 and ${currentYear + 10}`;
+    if (
+      formData.yearOfCompletion < 1900 ||
+      formData.yearOfCompletion > currentYear + 10
+    ) {
+      newErrors.yearOfCompletion = `Year must be between 1900 and ${
+        currentYear + 10
+      }`;
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: name === 'yearOfCompletion' ? parseInt(value) || new Date().getFullYear() : value
+      [name]:
+        name === "yearOfCompletion"
+          ? parseInt(value) || new Date().getFullYear()
+          : value,
     }));
 
     // Clear specific field error when user starts typing
     if (errors[name as keyof FormErrors]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: undefined
+        [name]: undefined,
       }));
     }
   };
@@ -116,26 +137,26 @@ const Certificate = () => {
     const file = e.target.files?.[0];
     if (file) {
       // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setErrors(prev => ({
+      if (!file.type.startsWith("image/")) {
+        setErrors((prev) => ({
           ...prev,
-          studentImage: 'Please select a valid image file'
+          studentImage: "Please select a valid image file",
         }));
         return;
       }
 
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          studentImage: 'Image size must be less than 5MB'
+          studentImage: "Image size must be less than 5MB",
         }));
         return;
       }
 
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        studentImage: file
+        studentImage: file,
       }));
 
       // Create preview
@@ -146,52 +167,57 @@ const Certificate = () => {
       reader.readAsDataURL(file);
 
       // Clear image error
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        studentImage: undefined
+        studentImage: undefined,
       }));
     }
   };
 
   const resetForm = () => {
     setFormData({
-      fullName: '',
-      certificateNumber: '',
-      program: '',
+      fullName: "",
+      certificateNumber: "",
+      program: "",
       yearOfCompletion: new Date().getFullYear(),
-      status: 'Valid',
-      studentImage: undefined
+      status: "Valid",
+      studentImage: undefined,
     });
-    setImagePreview('');
+    setImagePreview("");
     setIsEditMode(false);
     setEditingCertificate(null);
     setErrors({});
-    
+
     // Reset file input
-    const fileInput = document.getElementById('studentImage') as HTMLInputElement;
+    const fileInput = document.getElementById(
+      "studentImage"
+    ) as HTMLInputElement;
     if (fileInput) {
-      fileInput.value = '';
+      fileInput.value = "";
     }
   };
 
   const handleEdit = (certificate: FirebaseCertificate) => {
     setFormData({
-      fullName: certificate.fullName || '',
-      certificateNumber: certificate.certificateNumber || '',
-      program: certificate.program || '',
-      yearOfCompletion: certificate.yearOfCompletion || new Date().getFullYear(),
-      status: certificate.status || 'Valid',
-      studentImage: undefined
+      fullName: certificate.fullName || "",
+      certificateNumber: certificate.certificateNumber || "",
+      program: certificate.program || "",
+      yearOfCompletion:
+        certificate.yearOfCompletion || new Date().getFullYear(),
+      status: certificate.status || "Valid",
+      studentImage: undefined,
     });
-    setImagePreview(certificate.studentImageUrl || '');
+    setImagePreview(certificate.studentImageUrl || "");
     setEditingCertificate(certificate);
     setIsEditMode(true);
     setErrors({});
-    
+
     // Clear file input when editing
-    const fileInput = document.getElementById('studentImage') as HTMLInputElement;
+    const fileInput = document.getElementById(
+      "studentImage"
+    ) as HTMLInputElement;
     if (fileInput) {
-      fileInput.value = '';
+      fileInput.value = "";
     }
   };
 
@@ -205,14 +231,14 @@ const Certificate = () => {
 
   const confirmDelete = async () => {
     if (!deletingCertificate) return;
-    
+
     try {
       setLoading(true);
       await deleteCertificate(deletingCertificate.certificateNumber);
-      toast.success('Certificate deleted successfully!');
+      toast.success("Certificate deleted successfully!");
       await loadCertificates();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete certificate');
+      toast.error(error.message || "Failed to delete certificate");
     } finally {
       setLoading(false);
       setDeletingCertificate(null);
@@ -221,7 +247,7 @@ const Certificate = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -232,54 +258,56 @@ const Certificate = () => {
     try {
       if (isEditMode && editingCertificate) {
         await updateCertificate(editingCertificate.certificateNumber, formData);
-        toast.success('Certificate updated successfully!');
+        toast.success("Certificate updated successfully!");
       } else {
         await addCertificate(formData);
-        toast.success('Certificate added successfully!');
+        toast.success("Certificate added successfully!");
       }
-      
+
       // Reset form
       resetForm();
-      
+
       // Reload certificates list
       await loadCertificates();
-      
     } catch (error: any) {
-      console.error('Error saving certificate:', error);
-      if (error.message === 'Certificate number already exists') {
-        setErrors({ certificateNumber: 'Certificate number already exists' });
-        toast.error('Certificate number already exists');
+      console.error("Error saving certificate:", error);
+      if (error.message === "Certificate number already exists") {
+        setErrors({ certificateNumber: "Certificate number already exists" });
+        toast.error("Certificate number already exists");
       } else {
-        toast.error(error.message || 'Failed to save certificate');
+        toast.error(error.message || "Failed to save certificate");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStatusUpdate = async (certificateNumber: string, newStatus: 'Valid' | 'Invalid') => {
+  const handleStatusUpdate = async (
+    certificateNumber: string,
+    newStatus: "Valid" | "Invalid"
+  ) => {
     try {
       await updateCertificateStatus(certificateNumber, newStatus);
-      
+
       // Update local state
-      setCertificates(prev => 
-        prev.map(cert => 
-          cert.certificateNumber === certificateNumber 
+      setCertificates((prev) =>
+        prev.map((cert) =>
+          cert.certificateNumber === certificateNumber
             ? { ...cert, status: newStatus }
             : cert
         )
       );
     } catch (error) {
-      console.error('Error updating certificate status:', error);
-      toast.error('Failed to update certificate status');
+      console.error("Error updating certificate status:", error);
+      toast.error("Failed to update certificate status");
     }
   };
 
   const formatDate = (timestamp: any) => {
-    if (!timestamp) return 'N/A';
+    if (!timestamp) return "N/A";
     try {
       // Handle Firestore Timestamp objects
-      if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+      if (timestamp.toDate && typeof timestamp.toDate === "function") {
         return timestamp.toDate().toLocaleDateString();
       }
       // Handle regular Date objects or timestamp numbers
@@ -290,12 +318,12 @@ const Certificate = () => {
       // Handle other formats
       const date = new Date(timestamp);
       if (isNaN(date.getTime())) {
-        return 'N/A';
+        return "N/A";
       }
       return date.toLocaleDateString();
     } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'N/A';
+      console.error("Error formatting date:", error);
+      return "N/A";
     }
   };
 
@@ -306,30 +334,23 @@ const Certificate = () => {
         <h1 className="text-2xl md:text-3xl font-bold text-[#000054] mb-2">
           Certificate Management
         </h1>
-        <p className="text-gray-600">
-          Add and manage student certificates
-        </p>
+        <p className="text-gray-600">Add and manage student certificates</p>
       </div>
-
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Add/Edit Certificate Form */}
         <Card className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-[#000054]">
-              {isEditMode ? 'Edit Certificate' : 'Add New Certificate'}
+              {isEditMode ? "Edit Certificate" : "Add New Certificate"}
             </h2>
             {isEditMode && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetForm}
-              >
+              <Button variant="outline" size="sm" onClick={resetForm}>
                 Cancel Edit
               </Button>
             )}
           </div>
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <FormInput
               label="Full Name"
@@ -369,7 +390,10 @@ const Certificate = () => {
               id="yearOfCompletion"
               name="yearOfCompletion"
               type="number"
-              value={formData.yearOfCompletion?.toString() || new Date().getFullYear().toString()}
+              value={
+                formData.yearOfCompletion?.toString() ||
+                new Date().getFullYear().toString()
+              }
               onChange={handleInputChange}
               min="1900"
               max={new Date().getFullYear() + 10}
@@ -378,7 +402,10 @@ const Certificate = () => {
             />
 
             <div className="mb-4">
-              <label htmlFor="status" className="block text-sm font-medium text-[#000054] mb-1">
+              <label
+                htmlFor="status"
+                className="block text-sm font-medium text-[#000054] mb-1"
+              >
                 Status
               </label>
               <select
@@ -395,7 +422,10 @@ const Certificate = () => {
             </div>
 
             <div className="mb-4">
-              <label htmlFor="studentImage" className="block text-sm font-medium text-[#000054] mb-1">
+              <label
+                htmlFor="studentImage"
+                className="block text-sm font-medium text-[#000054] mb-1"
+              >
                 Student Image (Optional)
               </label>
               <input
@@ -407,9 +437,11 @@ const Certificate = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#000054] transition-colors duration-200"
               />
               {errors.studentImage && (
-                <p className="mt-1 text-sm text-red-600">{errors.studentImage}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.studentImage}
+                </p>
               )}
-              
+
               {/* Image Preview */}
               {imagePreview && (
                 <div className="mt-2">
@@ -429,10 +461,20 @@ const Certificate = () => {
               disabled={loading}
               className="mt-6"
             >
-              {loading 
-                ? (isEditMode ? 'Updating Certificate...' : 'Adding Certificate...') 
-                : (isEditMode ? 'Update Certificate' : 'Add Certificate')
-              }
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <FiLoader className="animate-spin h-5 w-5" />
+                  <span>
+                    {isEditMode
+                      ? "Updating Certificate..."
+                      : "Adding Certificate..."}
+                  </span>
+                </span>
+              ) : isEditMode ? (
+                "Update Certificate"
+              ) : (
+                "Add Certificate"
+              )}
             </Button>
           </form>
         </Card>
@@ -442,11 +484,13 @@ const Certificate = () => {
           <h2 className="text-xl font-semibold text-[#000054] mb-4">
             Existing Certificates ({certificates.length})
           </h2>
-          
+
           {loadingList ? (
             <div className="flex justify-center items-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#000054]"></div>
-              <span className="ml-2 text-gray-600">Loading certificates...</span>
+              <span className="ml-2 text-gray-600">
+                Loading certificates...
+              </span>
             </div>
           ) : certificates.length === 0 ? (
             <p className="text-gray-500 text-center py-8">
@@ -478,18 +522,18 @@ const Certificate = () => {
                           Added: {formatDate(certificate.createdAt)}
                         </p>
                       </div>
-                      
+
                       <div className="flex flex-col items-start gap-2">
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            certificate.status === 'Valid'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
+                            certificate.status === "Valid"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
                           }`}
                         >
                           {certificate.status}
                         </span>
-                        
+
                         {certificate.studentImageUrl && (
                           <img
                             src={certificate.studentImageUrl}
@@ -499,7 +543,7 @@ const Certificate = () => {
                         )}
                       </div>
                     </div>
-                    
+
                     {/* Action Icons */}
                     <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
                       {/* View Icon */}
@@ -510,7 +554,7 @@ const Certificate = () => {
                       >
                         <FiEye className="w-5 h-5" />
                       </button>
-                      
+
                       {/* Edit Icon */}
                       <button
                         onClick={() => handleEdit(certificate)}
@@ -519,29 +563,31 @@ const Certificate = () => {
                       >
                         <FiEdit2 className="w-5 h-5" />
                       </button>
-                      
+
                       {/* Toggle Status Icon */}
                       <button
                         onClick={() =>
                           handleStatusUpdate(
                             certificate.certificateNumber,
-                            certificate.status === 'Valid' ? 'Invalid' : 'Valid'
+                            certificate.status === "Valid" ? "Invalid" : "Valid"
                           )
                         }
                         className={`p-2 rounded-full transition-colors ${
-                          certificate.status === 'Valid'
-                            ? 'text-orange-600 hover:text-orange-800 hover:bg-orange-50'
-                            : 'text-green-600 hover:text-green-800 hover:bg-green-50'
+                          certificate.status === "Valid"
+                            ? "text-orange-600 hover:text-orange-800 hover:bg-orange-50"
+                            : "text-green-600 hover:text-green-800 hover:bg-green-50"
                         }`}
-                        title={`Mark as ${certificate.status === 'Valid' ? 'Invalid' : 'Valid'}`}
+                        title={`Mark as ${
+                          certificate.status === "Valid" ? "Invalid" : "Valid"
+                        }`}
                       >
-                        {certificate.status === 'Valid' ? (
+                        {certificate.status === "Valid" ? (
                           <FiXCircle className="w-5 h-5" />
                         ) : (
                           <FiCheckCircle className="w-5 h-5" />
                         )}
                       </button>
-                      
+
                       {/* Delete Icon */}
                       <button
                         onClick={() => handleDelete(certificate)}
@@ -575,60 +621,70 @@ const Certificate = () => {
                   ✕
                 </button>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Full Name
                     </label>
-                    <p className="text-gray-900">{viewingCertificate.fullName}</p>
+                    <p className="text-gray-900">
+                      {viewingCertificate.fullName}
+                    </p>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Certificate Number
                     </label>
-                    <p className="text-gray-900">{viewingCertificate.certificateNumber}</p>
+                    <p className="text-gray-900">
+                      {viewingCertificate.certificateNumber}
+                    </p>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Program
                     </label>
-                    <p className="text-gray-900">{viewingCertificate.program}</p>
+                    <p className="text-gray-900">
+                      {viewingCertificate.program}
+                    </p>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Year of Completion
                     </label>
-                    <p className="text-gray-900">{viewingCertificate.yearOfCompletion}</p>
+                    <p className="text-gray-900">
+                      {viewingCertificate.yearOfCompletion}
+                    </p>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Status
                     </label>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        viewingCertificate.status === 'Valid'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
+                        viewingCertificate.status === "Valid"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
                       }`}
                     >
                       {viewingCertificate.status}
                     </span>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Created
                     </label>
-                    <p className="text-gray-900">{formatDate(viewingCertificate.createdAt)}</p>
+                    <p className="text-gray-900">
+                      {formatDate(viewingCertificate.createdAt)}
+                    </p>
                   </div>
                 </div>
-                
+
                 {viewingCertificate.studentImageUrl && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -642,7 +698,7 @@ const Certificate = () => {
                   </div>
                 )}
               </div>
-              
+
               <div className="flex justify-end mt-6">
                 <Button
                   variant="outline"
@@ -664,16 +720,18 @@ const Certificate = () => {
               <h2 className="text-xl font-semibold text-[#000054] mb-4">
                 Confirm Delete
               </h2>
-              
+
               <p className="text-gray-600 mb-6">
-                Are you sure you want to delete the certificate for{' '}
+                Are you sure you want to delete the certificate for{" "}
                 <strong>{deletingCertificate.fullName}</strong>?
                 <br />
-                Certificate Number: <strong>{deletingCertificate.certificateNumber}</strong>
-                <br /><br />
+                Certificate Number:{" "}
+                <strong>{deletingCertificate.certificateNumber}</strong>
+                <br />
+                <br />
                 This action cannot be undone.
               </p>
-              
+
               <div className="flex justify-end gap-3">
                 <Button
                   variant="outline"
@@ -687,40 +745,41 @@ const Certificate = () => {
                   onClick={confirmDelete}
                   disabled={loading}
                 >
-                  {loading ? 'Deleting...' : 'Delete Certificate'}
+                  {loading ? "Deleting..." : "Delete Certificate"}
                 </Button>
               </div>
             </div>
           </div>
         </div>
       )}
-      
+
       {/* Toast Container */}
       <Toaster
         position="top-right"
         toastOptions={{
           duration: 4000,
           style: {
-            background: '#fff',
-            color: '#333',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+            background: "#fff",
+            color: "#333",
+            boxShadow:
+              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
           },
           success: {
             style: {
-              border: '1px solid #10B981',
+              border: "1px solid #10B981",
             },
             iconTheme: {
-              primary: '#10B981',
-              secondary: '#fff',
+              primary: "#10B981",
+              secondary: "#fff",
             },
           },
           error: {
             style: {
-              border: '1px solid #EF4444',
+              border: "1px solid #EF4444",
             },
             iconTheme: {
-              primary: '#EF4444',
-              secondary: '#fff',
+              primary: "#EF4444",
+              secondary: "#fff",
             },
           },
         }}

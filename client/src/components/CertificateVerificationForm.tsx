@@ -71,6 +71,7 @@ const CertificateVerificationForm: React.FC = () => {
     setVerificationResult(null);
   };
 
+  
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -80,7 +81,7 @@ const CertificateVerificationForm: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="md:max-w-2xl sm:w-full px-2 sm:px-2 md:px-8 lg:px-0 max-w-7xl mx-auto">
       <Card className="p-8">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-[#000054] text-white rounded-full mb-4">

@@ -55,14 +55,40 @@ export class SettingsService {
   // Profile Management
   static async getTeacherProfile(userId: string): Promise<TeacherProfile | null> {
     try {
+      if (!userId) {
+        console.error('No user ID provided to getTeacherProfile');
+        return null;
+      }
+
       const docRef = doc(db, this.PROFILES_COLLECTION, userId);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (!data) {
+          console.error('Document exists but has no data');
+          return null;
+        }
+        
         return {
           id: docSnap.id,
-          ...docSnap.data()
-        } as TeacherProfile;
+          userId: data.userId || userId,
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          email: data.email || '',
+          phoneNumber: data.phoneNumber || '',
+          avatar: data.avatar || '',
+          bio: data.bio || '',
+          department: data.department || '',
+          title: data.title || '',
+          officeLocation: data.officeLocation || '',
+          officeHours: data.officeHours || '',
+          specializations: Array.isArray(data.specializations) ? data.specializations : [],
+          qualifications: Array.isArray(data.qualifications) ? data.qualifications : [],
+          yearsOfExperience: typeof data.yearsOfExperience === 'number' ? data.yearsOfExperience : 0,
+          createdAt: data.createdAt || new Date().toISOString(),
+          updatedAt: data.updatedAt || new Date().toISOString()
+        };
       }
       return null;
     } catch (error) {

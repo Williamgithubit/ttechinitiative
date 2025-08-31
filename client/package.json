@@ -7,7 +7,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "update:dashboard": "node ./scripts/updateDashboardStats.js"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

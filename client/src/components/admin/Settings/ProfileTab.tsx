@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Card,
@@ -18,8 +18,8 @@ import {
   Chip,
   useTheme,
   useMediaQuery,
-} from '@mui/material';
-import Grid from '@/components/ui/Grid';
+} from "@mui/material";
+import Grid from "@/components/ui/Grid";
 import {
   Edit as EditIcon,
   Save as SaveIcon,
@@ -30,9 +30,10 @@ import {
   AccountCircle as AccountIcon,
   Email as EmailIcon,
   Phone as PhoneIcon,
-} from '@mui/icons-material';
-import { useAppSelector, useAppDispatch } from '@/store/store';
-import { updateUser } from '@/store/Auth/authSlice';
+} from "@mui/icons-material";
+import { useAppSelector, useAppDispatch } from "@/store/store";
+import { updateUser } from "@/store/Auth/authSlice";
+import { SettingsService } from "@/services/settingsService";
 
 interface ProfileTabProps {
   onSuccess: (message: string) => void;
@@ -41,28 +42,28 @@ interface ProfileTabProps {
 
 const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const currentUser = useAppSelector((state) => state.auth.user);
   const dispatch = useAppDispatch();
 
   // Profile settings state
   const [profileData, setProfileData] = useState({
-    name: currentUser?.name || '',
-    email: currentUser?.email || '',
-    phone: '',
-    bio: '',
-    location: '',
-    website: '',
+    name: currentUser?.name || "",
+    email: currentUser?.email || "",
+    phone: "",
+    bio: "",
+    location: "",
+    website: "",
   });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [editingProfile, setEditingProfile] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Password change state
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
   const [showPasswords, setShowPasswords] = useState({
     current: false,
@@ -74,26 +75,92 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
   const handleProfileSave = async () => {
     try {
       setLoading(true);
-      
-      // Save to localStorage for now (in production, this would save to API)
-      localStorage.setItem('profileSettings', JSON.stringify(profileData));
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update Redux store with new profile data
-      if (currentUser) {
-        dispatch(updateUser({ 
-          ...currentUser, 
-          name: profileData.name, 
-          email: profileData.email 
-        }));
-      }
-      
+      if (!currentUser) throw new Error("No authenticated user");
+
+      // Update backend profile
+      await SettingsService.updateTeacherProfile(currentUser.uid, {
+        firstName: profileData.name.split(" ")[0] || profileData.name,
+        lastName: profileData.name.split(" ").slice(1).join(" ") || "",
+        phoneNumber: profileData.phone,
+        bio: profileData.bio,
+        officeLocation: profileData.location,
+      });
+
+      // Update Redux store
+      dispatch(
+        updateUser({
+          ...currentUser,
+          name: profileData.name,
+          email: profileData.email,
+        })
+      );
+
       setEditingProfile(false);
-      onSuccess('Profile updated successfully!');
+      onSuccess("Profile updated successfully!");
     } catch (err) {
-      onError('Failed to update profile');
+      onError("Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load profile from service on mount
+  useEffect(() => {
+    let mounted = true;
+    const loadProfile = async () => {
+      if (!currentUser) return;
+      try {
+        const profile = await SettingsService.getTeacherProfile(
+          currentUser.uid
+        );
+        if (!mounted) return;
+        if (profile) {
+          setProfileData({
+            name:
+              `${profile.firstName || ""} ${profile.lastName || ""}`.trim() ||
+              currentUser.name ||
+              "",
+            email: profile.email || currentUser.email || "",
+            phone: profile.phoneNumber || "",
+            bio: profile.bio || "",
+            location: profile.officeLocation || "",
+            website: "",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load profile", error);
+      }
+    };
+
+    loadProfile();
+    return () => {
+      mounted = false;
+    };
+  }, [currentUser]);
+
+  const handleAvatarSelect = (file?: File) => {
+    if (!file) return;
+    setAvatarFile(file);
+  };
+
+  const handleAvatarUpload = async () => {
+    if (!avatarFile || !currentUser) {
+      onError("No file selected or no authenticated user");
+      return;
+    }
+    try {
+      setLoading(true);
+      const url = await SettingsService.uploadAvatar({
+        file: avatarFile,
+        userId: currentUser.uid,
+      });
+      onSuccess("Avatar uploaded");
+      // update Redux user avatar if present
+      dispatch(updateUser({ ...currentUser, photoURL: url }));
+      setAvatarFile(null);
+    } catch (err) {
+      console.error(err);
+      onError("Failed to upload avatar");
     } finally {
       setLoading(false);
     }
@@ -101,38 +168,46 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
 
   const handlePasswordChange = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      onError('New passwords do not match');
+      onError("New passwords do not match");
       return;
     }
-    
+
     if (passwordData.newPassword.length < 8) {
-      onError('Password must be at least 8 characters long');
+      onError("Password must be at least 8 characters long");
       return;
     }
 
     if (!passwordData.currentPassword) {
-      onError('Current password is required');
+      onError("Current password is required");
       return;
     }
 
     try {
       setLoading(true);
-      
-      // In production, this would call Firebase Auth to change password
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      if (!currentUser) throw new Error("No authenticated user");
+      await SettingsService.changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+        confirmPassword: passwordData.confirmPassword,
+      });
+
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
       setPasswordDialogOpen(false);
-      onSuccess('Password changed successfully!');
+      onSuccess("Password changed successfully!");
     } catch (err) {
-      onError('Failed to change password');
+      console.error(err);
+      onError((err as Error)?.message || "Failed to change password");
     } finally {
       setLoading(false);
     }
   };
 
-  const togglePasswordVisibility = (field: 'current' | 'new' | 'confirm') => {
-    setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
+  const togglePasswordVisibility = (field: "current" | "new" | "confirm") => {
+    setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
   return (
@@ -140,15 +215,15 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
       {/* Profile Card */}
       <Grid item xs={12} md={4}>
         <Card>
-          <CardContent sx={{ textAlign: 'center' }}>
-            <Avatar sx={{ width: 100, height: 100, mx: 'auto', mb: 2 }}>
-              {currentUser?.name?.charAt(0) || 'A'}
+          <CardContent sx={{ textAlign: "center" }}>
+            <Avatar sx={{ width: 100, height: 100, mx: "auto", mb: 2 }}>
+              {currentUser?.name?.charAt(0) || "A"}
             </Avatar>
             <Typography variant="h6" gutterBottom>
-              {currentUser?.name || 'Admin User'}
+              {currentUser?.name || "Admin User"}
             </Typography>
             <Typography variant="body2" color="textSecondary" gutterBottom>
-              {currentUser?.role || 'Administrator'}
+              {currentUser?.role || "Administrator"}
             </Typography>
             <Chip label="Active" color="success" size="small" sx={{ mb: 2 }} />
             <br />
@@ -156,10 +231,36 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
               variant="outlined"
               startIcon={<PhotoCameraIcon />}
               size="small"
-              onClick={() => onSuccess('Photo upload coming soon!')}
+              onClick={() => document.getElementById("avatar-input")?.click()}
             >
               Change Photo
             </Button>
+            <input
+              id="avatar-input"
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={(e) => handleAvatarSelect(e.target.files?.[0])}
+            />
+            {avatarFile && (
+              <Box mt={2} display="flex" gap={2}>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={handleAvatarUpload}
+                  disabled={loading}
+                >
+                  Upload
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setAvatarFile(null)}
+                >
+                  Cancel
+                </Button>
+              </Box>
+            )}
           </CardContent>
         </Card>
       </Grid>
@@ -182,7 +283,9 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
                   fullWidth
                   label="Full Name"
                   value={profileData.name}
-                  onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                  onChange={(e) =>
+                    setProfileData({ ...profileData, name: e.target.value })
+                  }
                   disabled={!editingProfile}
                   InputProps={{
                     startAdornment: (
@@ -199,7 +302,9 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
                   label="Email"
                   type="email"
                   value={profileData.email}
-                  onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                  onChange={(e) =>
+                    setProfileData({ ...profileData, email: e.target.value })
+                  }
                   disabled={!editingProfile}
                   InputProps={{
                     startAdornment: (
@@ -215,7 +320,9 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
                   fullWidth
                   label="Phone"
                   value={profileData.phone}
-                  onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                  onChange={(e) =>
+                    setProfileData({ ...profileData, phone: e.target.value })
+                  }
                   disabled={!editingProfile}
                   InputProps={{
                     startAdornment: (
@@ -231,7 +338,9 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
                   fullWidth
                   label="Location"
                   value={profileData.location}
-                  onChange={(e) => setProfileData({ ...profileData, location: e.target.value })}
+                  onChange={(e) =>
+                    setProfileData({ ...profileData, location: e.target.value })
+                  }
                   disabled={!editingProfile}
                 />
               </Grid>
@@ -242,7 +351,9 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
                   multiline
                   rows={3}
                   value={profileData.bio}
-                  onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
+                  onChange={(e) =>
+                    setProfileData({ ...profileData, bio: e.target.value })
+                  }
                   disabled={!editingProfile}
                   placeholder="Tell us about yourself..."
                 />
@@ -252,7 +363,9 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
                   fullWidth
                   label="Website"
                   value={profileData.website}
-                  onChange={(e) => setProfileData({ ...profileData, website: e.target.value })}
+                  onChange={(e) =>
+                    setProfileData({ ...profileData, website: e.target.value })
+                  }
                   disabled={!editingProfile}
                   placeholder="https://example.com"
                 />
@@ -266,7 +379,11 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
                       onClick={handleProfileSave}
                       disabled={loading}
                     >
-                      {loading ? <CircularProgress size={20} /> : 'Save Changes'}
+                      {loading ? (
+                        <CircularProgress size={20} />
+                      ) : (
+                        "Save Changes"
+                      )}
                     </Button>
                     <Button
                       variant="outlined"
@@ -285,7 +402,11 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
         <Card sx={{ mt: 3 }}>
           <CardHeader title="Password & Security" />
           <CardContent>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+            >
               <Box>
                 <Typography variant="body1" gutterBottom>
                   Password
@@ -313,33 +434,41 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
         fullWidth
         PaperProps={{
           sx: {
-            width: { xs: '95%', sm: '80%', md: '60%' },
-            p: { xs: 1, sm: 2 }
-          }
+            width: { xs: "95%", sm: "80%", md: "60%" },
+            p: { xs: 1, sm: 2 },
+          },
         }}
       >
-        <DialogTitle sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>Change Password</DialogTitle>
+        <DialogTitle sx={{ fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>
+          Change Password
+        </DialogTitle>
         <DialogContent>
           <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               <TextField
                 fullWidth
                 label="Current Password"
-                type={showPasswords.current ? 'text' : 'password'}
+                type={showPasswords.current ? "text" : "password"}
                 value={passwordData.currentPassword}
-                onChange={(e) => setPasswordData({ 
-                  ...passwordData, 
-                  currentPassword: e.target.value 
-                })}
+                onChange={(e) =>
+                  setPasswordData({
+                    ...passwordData,
+                    currentPassword: e.target.value,
+                  })
+                }
                 size={isMobile ? "small" : "medium"}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
-                        onClick={() => togglePasswordVisibility('current')}
+                        onClick={() => togglePasswordVisibility("current")}
                         edge="end"
                       >
-                        {showPasswords.current ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        {showPasswords.current ? (
+                          <VisibilityOffIcon />
+                        ) : (
+                          <VisibilityIcon />
+                        )}
                       </IconButton>
                     </InputAdornment>
                   ),
@@ -350,22 +479,28 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
               <TextField
                 fullWidth
                 label="New Password"
-                type={showPasswords.new ? 'text' : 'password'}
+                type={showPasswords.new ? "text" : "password"}
                 value={passwordData.newPassword}
-                onChange={(e) => setPasswordData({ 
-                  ...passwordData, 
-                  newPassword: e.target.value 
-                })}
+                onChange={(e) =>
+                  setPasswordData({
+                    ...passwordData,
+                    newPassword: e.target.value,
+                  })
+                }
                 helperText="Password must be at least 8 characters long"
                 size={isMobile ? "small" : "medium"}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
-                        onClick={() => togglePasswordVisibility('new')}
+                        onClick={() => togglePasswordVisibility("new")}
                         edge="end"
                       >
-                        {showPasswords.new ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        {showPasswords.new ? (
+                          <VisibilityOffIcon />
+                        ) : (
+                          <VisibilityIcon />
+                        )}
                       </IconButton>
                     </InputAdornment>
                   ),
@@ -376,21 +511,27 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
               <TextField
                 fullWidth
                 label="Confirm New Password"
-                type={showPasswords.confirm ? 'text' : 'password'}
+                type={showPasswords.confirm ? "text" : "password"}
                 value={passwordData.confirmPassword}
-                onChange={(e) => setPasswordData({ 
-                  ...passwordData, 
-                  confirmPassword: e.target.value 
-                })}
+                onChange={(e) =>
+                  setPasswordData({
+                    ...passwordData,
+                    confirmPassword: e.target.value,
+                  })
+                }
                 size={isMobile ? "small" : "medium"}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
-                        onClick={() => togglePasswordVisibility('confirm')}
+                        onClick={() => togglePasswordVisibility("confirm")}
                         edge="end"
                       >
-                        {showPasswords.confirm ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        {showPasswords.confirm ? (
+                          <VisibilityOffIcon />
+                        ) : (
+                          <VisibilityIcon />
+                        )}
                       </IconButton>
                     </InputAdornment>
                   ),
@@ -413,13 +554,19 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ onSuccess, onError }) => {
             disabled={loading}
             size={isMobile ? "small" : "medium"}
             sx={{
-              backgroundColor: '#E32845',
-              '&:hover': {
-                backgroundColor: '#c41e3a',
+              backgroundColor: "#E32845",
+              "&:hover": {
+                backgroundColor: "#c41e3a",
               },
             }}
           >
-            {loading ? <CircularProgress size={isMobile ? 16 : 20} /> : (isMobile ? 'Change' : 'Change Password')}
+            {loading ? (
+              <CircularProgress size={isMobile ? 16 : 20} />
+            ) : isMobile ? (
+              "Change"
+            ) : (
+              "Change Password"
+            )}
           </Button>
         </DialogActions>
       </Dialog>

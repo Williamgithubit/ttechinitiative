@@ -29,6 +29,7 @@ import {
   Refresh as RefreshIcon,
   Storage as StorageIcon,
   CardMembership as CertificateIcon,
+  Assignment as AdmissionIcon,
 } from '@mui/icons-material';
 import { 
   fetchDashboardStats, 
@@ -162,6 +163,11 @@ const Dashboard = () => {
       title: 'Total Certificates', 
       value: stats?.totalCertificates?.toLocaleString() || '0', 
       icon: <CertificateIcon fontSize="large" color="warning" /> 
+    },
+    { 
+      title: 'Total Admissions', 
+      value: stats?.totalAdmissions?.toLocaleString() || '0', 
+      icon: <AdmissionIcon fontSize="large" color="info" /> 
     },
     { 
       title: 'Tasks Completed', 

@@ -37,7 +37,8 @@ import {
   People as PeopleIcon,
   School as SchoolIcon,
   Add as AddIcon,
-  EmojiEvents as CertificateIcon
+  EmojiEvents as CertificateIcon,
+  Assignment as AssignmentIcon
 } from '@mui/icons-material';
 
 // Import Admin Components
@@ -48,6 +49,7 @@ import Settings from '@/components/admin/Settings/Settings';
 import Dashboard from '@/components/admin/Dashboard';
 import Reports from '@/components/admin/Reports';
 import Certificate from '@/components/admin/Certificate';
+import AdmissionManagement from '@/components/admin/AdmissionManagement';
 
 const drawerWidth = 240;
 
@@ -55,6 +57,7 @@ const tabs = [
   { id: 'dashboard', label: 'Dashboard', icon: <InsertChartIcon /> },
   { id: 'users', label: 'User Management', icon: <PeopleIcon /> },
   { id: 'programs', label: 'Programs', icon: <SchoolIcon /> },
+  { id: 'admissions', label: 'Admissions', icon: <AssignmentIcon /> },
   { id: 'certificates', label: 'Certificates', icon: <CertificateIcon /> },
   { id: 'reports', label: 'Reports', icon: <ArticleIcon /> },
   { id: 'events', label: 'Events', icon: <EventIcon /> },
@@ -354,6 +357,7 @@ export default function AdminDashboard() {
         {tab === 'dashboard' && <Dashboard />}
         {tab === 'users' && <UserManagement openDialog={userDialogOpen} onCloseDialog={() => setUserDialogOpen(false)} />}
         {tab === 'programs' && <ProgramManagement openDialog={programDialogOpen} onCloseDialog={() => setProgramDialogOpen(false)} />}
+        {tab === 'admissions' && <AdmissionManagement isAdmin={true} />}
         {tab === 'certificates' && <Certificate />}
         {tab === 'reports' && <Reports />}
         {tab === 'events' && <EventManagement openDialog={eventDialogOpen} onCloseDialog={() => setEventDialogOpen(false)} />}

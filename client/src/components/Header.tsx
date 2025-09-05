@@ -6,7 +6,7 @@ import { RootState, useAppDispatch } from '@/store/store';
 import { performLogout } from '@/store/Auth/logoutAction';
 import { FaBars, FaTimes, FaUserCircle } from 'react-icons/fa';
 import { FaBarsStaggered } from "react-icons/fa6";
-import { FiLogIn, FiLogOut } from 'react-icons/fi';
+import { FiLogIn, FiLogOut, FiChevronDown } from 'react-icons/fi';
 import Image from 'next/image';
 import logo from "../../public/assets/TTI-Logo-kHVWUz7q.png";
 import Link from 'next/link';
@@ -36,11 +36,11 @@ const Header = () => {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isAdmissionDropdownOpen, setIsAdmissionDropdownOpen] = useState(false);
 
   const navigation: NavigationItem[] = [
     { name: 'Home', path: '/' },
     { name: 'About', path: '/about' },
-    { name: 'Programs', path: '/programs' },
     { name: 'Events', path: '/events' },
     { name: 'Volunteer', path: '/volunteer' },
     { name: 'Blog', path: '/blog' },
@@ -73,6 +73,43 @@ const Header = () => {
                   {item.name}
                 </Link>
               ))}
+              
+              {/* Admission Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsAdmissionDropdownOpen(!isAdmissionDropdownOpen)}
+                  className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-white hover:text-[#E32845] hover:bg-gray-50 transition-colors duration-200"
+                >
+                  Admission
+                  <FiChevronDown className={`ml-1 h-4 w-4 transition-transform duration-200 ${isAdmissionDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {isAdmissionDropdownOpen && (
+                  <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border">
+                    <Link
+                      href="/admission"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#E32845]"
+                      onClick={() => setIsAdmissionDropdownOpen(false)}
+                    >
+                      Apply for Admission
+                    </Link>
+                    <Link
+                      href="/my-application"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#E32845]"
+                      onClick={() => setIsAdmissionDropdownOpen(false)}
+                    >
+                      My Application Status
+                    </Link>
+                    <Link
+                      href="/admission-faq"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#E32845]"
+                      onClick={() => setIsAdmissionDropdownOpen(false)}
+                    >
+                      Admission FAQ
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           </nav>
           
@@ -164,6 +201,53 @@ const Header = () => {
                 {item.name}
               </Link>
             ))}
+            
+            {/* Mobile Admission Dropdown */}
+            <div className="space-y-1">
+              <button
+                onClick={() => setIsAdmissionDropdownOpen(!isAdmissionDropdownOpen)}
+                className="flex items-center justify-between w-full px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#E32845] hover:bg-gray-50"
+              >
+                Admission
+                <FiChevronDown className={`h-4 w-4 transition-transform duration-200 ${isAdmissionDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {isAdmissionDropdownOpen && (
+                <div className="pl-4 space-y-1">
+                  <Link
+                    href="/admission"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setIsAdmissionDropdownOpen(false);
+                    }}
+                    className="block px-3 py-2 rounded-md text-sm text-gray-600 hover:text-[#E32845] hover:bg-gray-50"
+                  >
+                    Apply for Admission
+                  </Link>
+                  <Link
+                    href="/my-application"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setIsAdmissionDropdownOpen(false);
+                    }}
+                    className="block px-3 py-2 rounded-md text-sm text-gray-600 hover:text-[#E32845] hover:bg-gray-50"
+                  >
+                    My Application Status
+                  </Link>
+                  <Link
+                    href="/admission-faq"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setIsAdmissionDropdownOpen(false);
+                    }}
+                    className="block px-3 py-2 rounded-md text-sm text-gray-600 hover:text-[#E32845] hover:bg-gray-50"
+                  >
+                    Admission FAQ
+                  </Link>
+                </div>
+              )}
+            </div>
+            
             <div className="pt-4 pb-2">
               {user ? (
                 <>

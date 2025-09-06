@@ -13,6 +13,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate environment variables
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.error('Missing SMTP credentials:', {
+        SMTP_USER: !!process.env.SMTP_USER,
+        SMTP_PASS: !!process.env.SMTP_PASS
+      });
+      return NextResponse.json(
+        { success: false, error: 'Email service not configured' },
+        { status: 500 }
+      );
+    }
+
     // Create transporter with Gmail configuration
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -133,6 +145,18 @@ This is an automated message. Please do not reply to this email.
 
     console.log('Attempting to send email to:', applicantEmail);
     console.log('Using SMTP user:', process.env.SMTP_USER);
+    
+    // Verify transporter connection before sending
+    try {
+      await transporter.verify();
+      console.log('SMTP connection verified successfully');
+    } catch (verifyError) {
+      console.error('SMTP verification failed:', verifyError);
+      return NextResponse.json(
+        { success: false, error: 'SMTP connection failed', details: verifyError instanceof Error ? verifyError.message : 'Unknown verification error' },
+        { status: 500 }
+      );
+    }
     
     await transporter.sendMail(mailOptions);
     console.log('Email sent successfully to:', applicantEmail);

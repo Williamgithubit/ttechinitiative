@@ -1,5 +1,5 @@
 'use client';
-import { useSession } from 'next-auth/react';
+import { useAppSelector } from '@/store/store';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Counter from '@/components/ui/Counter';
@@ -12,9 +12,8 @@ interface PageProps {
 }
 
 const Events = ({ searchParams }: PageProps) => {
-  // Get user from session or context instead of props in Next.js 13+
-  const { data: session } = useSession();
-  const user = session?.user || null;
+  // Get user from Firebase auth state via Redux
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const events = [
     {
       id: 1,
@@ -49,7 +48,7 @@ const Events = ({ searchParams }: PageProps) => {
   ];
 
   const handleEventRegister = (eventId: number) => {
-    if (!user) {
+    if (!isAuthenticated || !user) {
       alert('Please log in to register for events');
       return;
     }

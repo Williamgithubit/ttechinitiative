@@ -651,6 +651,8 @@ const AdmissionManagement: React.FC<AdmissionManagementProps> = ({ isAdmin = fal
                                   <p><span className="font-medium">DOB:</span> {application.dateOfBirth}</p>
                                   <p><span className="font-medium">Gender:</span> {application.gender}</p>
                                   <p><span className="font-medium">Nationality:</span> {application.nationality}</p>
+                                  <p><span className="font-medium">ID Type:</span> {application.identificationType || 'Not provided'}</p>
+                                  <p><span className="font-medium">ID Number:</span> {application.identificationNumber || 'Not provided'}</p>
                                   <p><span className="font-medium">Phone:</span> {application.phoneNumber}</p>
                                   <p><span className="font-medium">Computer Access:</span> {application.personalComputer ? 'Yes' : 'No'}</p>
                                 </div>

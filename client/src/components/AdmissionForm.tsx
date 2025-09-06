@@ -7,7 +7,7 @@ import PersonalInfoStep from './steps/PersonalInfoStep';
 import EducationInfoStep from './steps/EducationInfoStep';
 import ContactInfoStep from './steps/ContactInfoStep';
 import { AdmissionFormData, submitAdmissionApplication } from '../services/firebaseAdmissionService';
-import { sendAdmissionIdEmail } from '../services/emailService';
+import emailService, { sendAdmissionIdEmail } from '../services/emailService';
 
 interface FormErrors {
   [key: string]: string;
@@ -133,13 +133,30 @@ const AdmissionForm: React.FC = () => {
       const result = await submitAdmissionApplication(formData);
       toast.dismiss(loadingToast);
       
-      // Send admission ID email
-      const emailSent = await sendAdmissionIdEmail({
-        applicantName: `${formData.firstName} ${formData.lastName}`,
-        applicantEmail: formData.email,
-        applicantId: result.applicantId,
-        program: formData.desiredProgram,
-      });
+      // Send admission ID email - use fallback method for production compatibility
+      let emailSent = false;
+      try {
+        emailSent = await sendAdmissionIdEmail({
+          applicantName: `${formData.firstName} ${formData.lastName}`,
+          applicantEmail: formData.email,
+          applicantId: result.applicantId,
+          program: formData.desiredProgram,
+        });
+      } catch (emailError) {
+        console.error('Email service error, trying fallback:', emailError);
+        // Fallback to direct service call
+        try {
+          emailSent = await emailService.sendAdmissionIdEmail({
+            applicantName: `${formData.firstName} ${formData.lastName}`,
+            applicantEmail: formData.email,
+            applicantId: result.applicantId,
+            program: formData.desiredProgram,
+          });
+        } catch (fallbackError) {
+          console.error('Fallback email service also failed:', fallbackError);
+          emailSent = false;
+        }
+      }
 
       if (emailSent) {
         toast.success(
@@ -318,7 +335,30 @@ const AdmissionForm: React.FC = () => {
                 onClick={handleSubmit} 
                 disabled={isSubmitting}
                 variant="secondary"
+                className="relative"
               >
+                {isSubmitting && (
+                  <svg 
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24"
+                  >
+                    <circle 
+                      className="opacity-25" 
+                      cx="12" 
+                      cy="12" 
+                      r="10" 
+                      stroke="currentColor" 
+                      strokeWidth="4"
+                    ></circle>
+                    <path 
+                      className="opacity-75" 
+                      fill="currentColor" 
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                )}
                 {isSubmitting ? 'Submitting...' : 'Submit Application'}
               </Button>
             </div>

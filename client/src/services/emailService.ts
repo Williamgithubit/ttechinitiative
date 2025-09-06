@@ -14,7 +14,7 @@ export interface AdmissionEmailData {
  * @param emailData - Email data containing applicant information
  * @returns Promise<boolean> - Success status
  */
-export async function sendAdmissionIdEmail(emailData: AdmissionEmailData): Promise<boolean> {
+export const sendAdmissionIdEmail = async (emailData: AdmissionEmailData): Promise<boolean> => {
   try {
     const response = await fetch('/api/send-admission-email', {
       method: 'POST',
@@ -34,4 +34,9 @@ export async function sendAdmissionIdEmail(emailData: AdmissionEmailData): Promi
     console.error('Error sending admission email:', error);
     return false;
   }
-}
+};
+
+// Default export for better compatibility
+export default {
+  sendAdmissionIdEmail,
+};

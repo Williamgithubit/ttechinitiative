@@ -7,7 +7,7 @@ import PersonalInfoStep from './steps/PersonalInfoStep';
 import EducationInfoStep from './steps/EducationInfoStep';
 import ContactInfoStep from './steps/ContactInfoStep';
 import { AdmissionFormData, submitAdmissionApplication } from '../services/firebaseAdmissionService';
-import emailService from '../services/emailService';
+import { sendAdmissionIdEmail } from '../services/emailService';
 
 interface FormErrors {
   [key: string]: string;
@@ -136,7 +136,7 @@ const AdmissionForm: React.FC = () => {
       // Send admission ID email using the working pattern from contact form
       let emailSent = false;
       try {
-        emailSent = await emailService.sendAdmissionIdEmail({
+        emailSent = await sendAdmissionIdEmail({
           applicantName: `${formData.firstName} ${formData.lastName}`,
           applicantEmail: formData.email,
           applicantId: result.applicantId,

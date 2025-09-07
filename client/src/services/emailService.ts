@@ -14,7 +14,7 @@ export interface AdmissionEmailData {
  * @param emailData - Email data containing applicant information
  * @returns Promise<boolean> - Success status
  */
-export const sendAdmissionIdEmail = async (emailData: AdmissionEmailData): Promise<boolean> => {
+const sendAdmissionIdEmail = async (emailData: AdmissionEmailData): Promise<boolean> => {
   try {
     console.log('Sending admission email with data:', emailData);
     
@@ -46,7 +46,9 @@ export const sendAdmissionIdEmail = async (emailData: AdmissionEmailData): Promi
   }
 };
 
-// Default export for better compatibility
+// Export both named and default for compatibility
+export { sendAdmissionIdEmail };
+
 export default {
   sendAdmissionIdEmail,
 };

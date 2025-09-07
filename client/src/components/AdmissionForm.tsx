@@ -7,7 +7,7 @@ import PersonalInfoStep from './steps/PersonalInfoStep';
 import EducationInfoStep from './steps/EducationInfoStep';
 import ContactInfoStep from './steps/ContactInfoStep';
 import { AdmissionFormData, submitAdmissionApplication } from '../services/firebaseAdmissionService';
-import emailService, { sendAdmissionIdEmail } from '../services/emailService';
+import emailService from '../services/emailService';
 
 interface FormErrors {
   [key: string]: string;
@@ -133,29 +133,18 @@ const AdmissionForm: React.FC = () => {
       const result = await submitAdmissionApplication(formData);
       toast.dismiss(loadingToast);
       
-      // Send admission ID email - use fallback method for production compatibility
+      // Send admission ID email using the working pattern from contact form
       let emailSent = false;
       try {
-        emailSent = await sendAdmissionIdEmail({
+        emailSent = await emailService.sendAdmissionIdEmail({
           applicantName: `${formData.firstName} ${formData.lastName}`,
           applicantEmail: formData.email,
           applicantId: result.applicantId,
           program: formData.desiredProgram,
         });
       } catch (emailError) {
-        console.error('Email service error, trying fallback:', emailError);
-        // Fallback to direct service call
-        try {
-          emailSent = await emailService.sendAdmissionIdEmail({
-            applicantName: `${formData.firstName} ${formData.lastName}`,
-            applicantEmail: formData.email,
-            applicantId: result.applicantId,
-            program: formData.desiredProgram,
-          });
-        } catch (fallbackError) {
-          console.error('Fallback email service also failed:', fallbackError);
-          emailSent = false;
-        }
+        console.error('Email service error:', emailError);
+        emailSent = false;
       }
 
       if (emailSent) {

@@ -198,13 +198,25 @@ const AdmissionForm: React.FC = () => {
         ? error.message 
         : 'Failed to submit application. Please try again.';
       
-      toast.error(errorMessage, {
-        duration: 5000,
-        style: {
-          background: '#EF4444',
-          color: 'white',
-        },
-      });
+      // Handle duplicate submission errors with specific styling
+      if (errorMessage.includes('already submitted') || errorMessage.includes('already exists')) {
+        toast.error(errorMessage, {
+          duration: 8000,
+          style: {
+            background: '#DC2626',
+            color: 'white',
+            fontWeight: 'bold',
+          },
+        });
+      } else {
+        toast.error(errorMessage, {
+          duration: 5000,
+          style: {
+            background: '#EF4444',
+            color: 'white',
+          },
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }

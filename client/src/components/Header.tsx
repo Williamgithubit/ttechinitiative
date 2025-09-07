@@ -44,7 +44,6 @@ const Header = () => {
     { name: 'Events', path: '/events' },
     { name: 'Volunteer', path: '/volunteer' },
     { name: 'Blog', path: '/blog' },
-    { name: 'Contact', path: '/contact' },
   ];
 
   return (
@@ -110,6 +109,14 @@ const Header = () => {
                   </div>
                 )}
               </div>
+
+              {/* Contact Link */}
+              <Link
+                href="/contact"
+                className="px-3 py-2 rounded-md text-sm font-medium text-white hover:text-[#E32845] hover:bg-gray-50 transition-colors duration-200"
+              >
+                Contact
+              </Link>
             </div>
           </nav>
           
@@ -247,6 +254,15 @@ const Header = () => {
                 </div>
               )}
             </div>
+
+            {/* Mobile Contact Link */}
+            <Link
+              href="/contact"
+              onClick={() => setIsMenuOpen(false)}
+              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-[#E32845] hover:bg-gray-50"
+            >
+              Contact
+            </Link>
             
             <div className="pt-4 pb-2">
               {user ? (

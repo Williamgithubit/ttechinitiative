@@ -14,10 +14,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate environment variables
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      console.error('Missing SMTP credentials:', {
-        SMTP_USER: !!process.env.SMTP_USER,
-        SMTP_PASS: !!process.env.SMTP_PASS
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+      console.error('Missing email credentials:', {
+        EMAIL_USER: !!process.env.EMAIL_USER,
+        EMAIL_PASSWORD: !!process.env.EMAIL_PASSWORD
       });
       return NextResponse.json(
         { success: false, error: 'Email service not configured' },
@@ -25,19 +25,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create transporter with Gmail configuration
+    // Create nodemailer transporter (using same config as working contact form)
     const transporter = nodemailer.createTransport({
       service: 'gmail',
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false, // true for 465, false for other ports
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
       },
-      tls: {
-        rejectUnauthorized: false
-      }
     });
 
     // Email template
@@ -136,27 +130,12 @@ This is an automated message. Please do not reply to this email.
 
     // Send email
     const mailOptions = {
-      from: `"TTech Initiative" <${process.env.SMTP_USER}>`,
+      from: process.env.EMAIL_USER,
       to: applicantEmail,
       subject: `Admission Application Confirmation - ID: ${applicantId}`,
       text: textContent,
       html: htmlContent,
     };
-
-    console.log('Attempting to send email to:', applicantEmail);
-    console.log('Using SMTP user:', process.env.SMTP_USER);
-    
-    // Verify transporter connection before sending
-    try {
-      await transporter.verify();
-      console.log('SMTP connection verified successfully');
-    } catch (verifyError) {
-      console.error('SMTP verification failed:', verifyError);
-      return NextResponse.json(
-        { success: false, error: 'SMTP connection failed', details: verifyError instanceof Error ? verifyError.message : 'Unknown verification error' },
-        { status: 500 }
-      );
-    }
     
     await transporter.sendMail(mailOptions);
     console.log('Email sent successfully to:', applicantEmail);
@@ -164,29 +143,8 @@ This is an automated message. Please do not reply to this email.
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error sending admission email:', error);
-    
-    // Type-safe error handling
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    const errorDetails: any = {};
-    
-    if (error instanceof Error) {
-      errorDetails.message = error.message;
-      errorDetails.name = error.name;
-      errorDetails.stack = error.stack;
-    }
-    
-    // Check for nodemailer-specific error properties
-    if (error && typeof error === 'object') {
-      const nodeMailerError = error as any;
-      if ('code' in nodeMailerError) errorDetails.code = nodeMailerError.code;
-      if ('response' in nodeMailerError) errorDetails.response = nodeMailerError.response;
-      if ('responseCode' in nodeMailerError) errorDetails.responseCode = nodeMailerError.responseCode;
-    }
-    
-    console.error('Error details:', errorDetails);
-    
     return NextResponse.json(
-      { success: false, error: 'Failed to send email', details: errorMessage },
+      { error: 'Failed to send email. Please try again later.' },
       { status: 500 }
     );
   }

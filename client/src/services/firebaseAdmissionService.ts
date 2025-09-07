@@ -7,6 +7,7 @@ import {
   deleteDoc,
   query, 
   orderBy, 
+  where,
   serverTimestamp,
   Timestamp 
 } from 'firebase/firestore';
@@ -94,6 +95,47 @@ export interface FirebaseAdmissionApplication {
 }
 
 /**
+ * Check if an application already exists with the given email
+ * @param email - Email to check
+ * @returns Promise<boolean> - True if email exists
+ */
+export async function checkEmailExists(email: string): Promise<boolean> {
+  try {
+    const admissionsRef = collection(db, 'admissionApplications');
+    const emailQuery = query(admissionsRef, where('email', '==', email.toLowerCase()));
+    const querySnapshot = await getDocs(emailQuery);
+    return !querySnapshot.empty;
+  } catch (error) {
+    console.error('Error checking email existence:', error);
+    throw new Error('Failed to check email existence');
+  }
+}
+
+/**
+ * Check for duplicate applications based on personal information
+ * @param formData - Form data to check
+ * @returns Promise<boolean> - True if duplicate found
+ */
+export async function checkDuplicateApplication(formData: AdmissionFormData): Promise<boolean> {
+  try {
+    const admissionsRef = collection(db, 'admissionApplications');
+    
+    // Check for duplicate based on identification number and date of birth
+    const duplicateQuery = query(
+      admissionsRef, 
+      where('identificationNumber', '==', formData.identificationNumber),
+      where('dateOfBirth', '==', formData.dateOfBirth)
+    );
+    
+    const querySnapshot = await getDocs(duplicateQuery);
+    return !querySnapshot.empty;
+  } catch (error) {
+    console.error('Error checking duplicate application:', error);
+    throw new Error('Failed to check duplicate application');
+  }
+}
+
+/**
  * Generate unique applicant ID
  * @returns string - Unique applicant ID
  */
@@ -151,6 +193,17 @@ export async function submitAdmissionApplication(formData: AdmissionFormData): P
   let applicantId = formData.applicantId || generateApplicantId();
   
   try {
+    // Check for duplicate email first
+    const emailExists = await checkEmailExists(formData.email);
+    if (emailExists) {
+      throw new Error('You have already submitted an admission application with this email.');
+    }
+
+    // Check for duplicate application based on personal information
+    const duplicateExists = await checkDuplicateApplication(formData);
+    if (duplicateExists) {
+      throw new Error('An admission application with the same identification number and date of birth already exists.');
+    }
     
     // Ensure unique applicant ID
     while (await checkApplicantExists(applicantId)) {

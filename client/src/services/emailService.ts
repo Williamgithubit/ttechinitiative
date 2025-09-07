@@ -16,6 +16,8 @@ export interface AdmissionEmailData {
  */
 export const sendAdmissionIdEmail = async (emailData: AdmissionEmailData): Promise<boolean> => {
   try {
+    console.log('Sending admission email with data:', emailData);
+    
     const response = await fetch('/api/send-admission-email', {
       method: 'POST',
       headers: {
@@ -24,12 +26,20 @@ export const sendAdmissionIdEmail = async (emailData: AdmissionEmailData): Promi
       body: JSON.stringify(emailData),
     });
 
+    console.log('Email API response status:', response.status, response.statusText);
+
     if (!response.ok) {
-      throw new Error(`Email service error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('Email API error response:', errorText);
+      throw new Error(`Email service error: ${response.statusText} - ${errorText}`);
     }
 
     const result = await response.json();
-    return result.message === 'Email sent successfully';
+    console.log('Email API success response:', result);
+    
+    const success = result.message === 'Email sent successfully';
+    console.log('Email send result:', success);
+    return success;
   } catch (error) {
     console.error('Error sending admission email:', error);
     return false;

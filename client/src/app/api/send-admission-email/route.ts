@@ -2,16 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
 export async function POST(request: NextRequest) {
+  console.log('=== Admission Email API Called ===');
   try {
     const { applicantName, applicantEmail, applicantId, program } = await request.json();
+    console.log('Request data:', { applicantName, applicantEmail, applicantId, program });
 
     // Validate required fields
     if (!applicantName || !applicantEmail || !applicantId || !program) {
+      console.error('Missing required fields:', { applicantName, applicantEmail, applicantId, program });
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
     }
+
+    console.log('Environment variables check:', {
+      EMAIL_USER: !!process.env.EMAIL_USER,
+      EMAIL_PASSWORD: !!process.env.EMAIL_PASSWORD,
+      EMAIL_USER_VALUE: process.env.EMAIL_USER
+    });
 
     // Create nodemailer transporter (exact same config as working contact form)
     const transporter = nodemailer.createTransport({
@@ -124,15 +133,29 @@ This is an automated message. Please do not reply to this email.
       html: htmlContent,
     };
     
+    console.log('Attempting to send email with options:', {
+      from: mailOptions.from,
+      to: mailOptions.to,
+      subject: mailOptions.subject
+    });
+    
     await transporter.sendMail(mailOptions);
+    console.log('Email sent successfully to:', applicantEmail);
 
     return NextResponse.json(
       { message: 'Email sent successfully' },
       { status: 200 }
     );
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error sending email:', error);
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      command: error?.command,
+      response: error?.response,
+      responseCode: error?.responseCode
+    });
     return NextResponse.json(
       { error: 'Failed to send email. Please try again later.' },
       { status: 500 }

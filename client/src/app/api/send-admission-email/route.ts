@@ -8,24 +8,12 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!applicantName || !applicantEmail || !applicantId || !program) {
       return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
+        { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    // Validate environment variables
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-      console.error('Missing email credentials:', {
-        EMAIL_USER: !!process.env.EMAIL_USER,
-        EMAIL_PASSWORD: !!process.env.EMAIL_PASSWORD
-      });
-      return NextResponse.json(
-        { success: false, error: 'Email service not configured' },
-        { status: 500 }
-      );
-    }
-
-    // Create nodemailer transporter (using same config as working contact form)
+    // Create nodemailer transporter (exact same config as working contact form)
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -128,21 +116,23 @@ This is an automated message. Please do not reply to this email.
 © 2024 TTech Initiative. All rights reserved.
     `;
 
-    // Send email
+    // Send email (using same pattern as working contact form)
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: applicantEmail,
       subject: `Admission Application Confirmation - ID: ${applicantId}`,
-      text: textContent,
       html: htmlContent,
     };
     
     await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully to:', applicantEmail);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(
+      { message: 'Email sent successfully' },
+      { status: 200 }
+    );
+
   } catch (error) {
-    console.error('Error sending admission email:', error);
+    console.error('Error sending email:', error);
     return NextResponse.json(
       { error: 'Failed to send email. Please try again later.' },
       { status: 500 }

@@ -29,7 +29,7 @@ export const sendAdmissionIdEmail = async (emailData: AdmissionEmailData): Promi
     }
 
     const result = await response.json();
-    return result.success;
+    return result.message === 'Email sent successfully';
   } catch (error) {
     console.error('Error sending admission email:', error);
     return false;

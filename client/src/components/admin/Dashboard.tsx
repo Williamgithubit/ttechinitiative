@@ -30,6 +30,7 @@ import {
   Storage as StorageIcon,
   CardMembership as CertificateIcon,
   Assignment as AdmissionIcon,
+  Article as BlogIcon,
 } from '@mui/icons-material';
 import { 
   fetchDashboardStats, 
@@ -39,6 +40,7 @@ import {
   RecentActivity 
 } from '@/services/dashboardService';
 import { seedSampleData } from '@/utils/seedDashboardData';
+import QuickActions from './QuickActions';
 
 const Dashboard = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -160,6 +162,11 @@ const Dashboard = () => {
       icon: <EventIcon fontSize="large" color="success" /> 
     },
     { 
+      title: 'Blog Posts', 
+      value: stats?.totalBlogPosts?.toLocaleString() || '0', 
+      icon: <BlogIcon fontSize="large" sx={{ color: '#E32845' }} /> 
+    },
+    { 
       title: 'Total Certificates', 
       value: stats?.totalCertificates?.toLocaleString() || '0', 
       icon: <CertificateIcon fontSize="large" color="warning" /> 
@@ -230,7 +237,7 @@ const Dashboard = () => {
       
       <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mt: 2, mb: 4 }}>
         {statsCards.map((stat, index) => (
-          <Grid key={index} xs={12} sm={6} md={3}>
+          <Grid key={index} xs={12} sm={6} lg={3} xl={2}>
             <Paper 
               elevation={2}
               sx={{
@@ -357,22 +364,7 @@ const Dashboard = () => {
           </Paper>
         </Grid>
         <Grid xs={12} md={4}>
-          <Paper 
-            elevation={2} 
-            sx={{ 
-              p: { xs: 1.5, sm: 2 },
-              background: 'white',
-              borderRadius: 2,
-              border: '1px solid rgba(0, 0, 84, 0.1)',
-            }}
-          >
-            <Typography variant="h6" gutterBottom sx={{ color: '#000054', fontWeight: 'bold' }}>
-              Quick Actions
-            </Typography>
-            <Typography color="textSecondary">
-              Quick action buttons will be available in the next update
-            </Typography>
-          </Paper>
+          <QuickActions />
         </Grid>
       </Grid>
     </Box>

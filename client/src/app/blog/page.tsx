@@ -1,85 +1,57 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { FiCalendar, FiClock, FiSearch, FiArrowRight } from 'react-icons/fi';
 import { FaFacebook, FaTwitter, FaLinkedin } from 'react-icons/fa';
 import Button from '@/components/ui/Button';
+import { getBlogPosts, BlogPost } from '@/services/blogService';
 
 const Blog = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
-
-  const categories = [
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([
     { id: 'all', name: 'All Posts' },
     { id: 'updates', name: 'News & Updates' },
     { id: 'events', name: 'Events' },
     { id: 'stories', name: 'Success Stories' },
     { id: 'tech', name: 'Tech Tips' }
-  ];
+  ]);
 
-  const blogPosts = [
-    {
-      id: 1,
-      title: "Empowering Youth Through Digital Literacy in Monrovia",
-      excerpt: "Last week, we successfully conducted an intensive digital literacy workshop in central Monrovia, equipping 50 young individuals with essential computer skills that will open doors to new opportunities.",
-      date: "2024-01-15",
-      readTime: "5 min read",
-      category: "events",
-      tags: ["workshop", "digital literacy", "Monrovia"],
-      image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1471&q=80"
-    },
-    {
-      id: 2,
-      title: "New State-of-the-Art Computer Lab Launched in Ganta",
-      excerpt: "Thanks to the incredible support from our community partners, we've established a cutting-edge computer lab in Ganta, now serving over 200 students monthly with access to modern technology.",
-      date: "2024-01-10",
-      readTime: "4 min read",
-      category: "updates",
-      tags: ["facilities", "expansion", "education"],
-      image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80"
-    },
-    {
-      id: 3,
-      title: "Meet Our First Cohort of Tech Educator Volunteers",
-      excerpt: "We're proud to announce the graduation of our first cohort of 15 passionate tech educators who completed our intensive training program and are now ready to make an impact in communities across Liberia.",
-      date: "2024-01-05",
-      readTime: "6 min read",
-      category: "stories",
-      tags: ["volunteers", "training", "community"],
-      image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80"
-    },
-    {
-      id: 4,
-      title: "5 Essential Coding Skills for Beginners in 2024",
-      excerpt: "In today's digital age, learning to code is more valuable than ever. Here are the top 5 programming languages and skills that will give beginners the best start in their tech journey.",
-      date: "2023-12-20",
-      readTime: "8 min read",
-      category: "tech",
-      tags: ["coding", "tutorial", "beginners"],
-      image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1472&q=80"
-    },
-    {
-      id: 5,
-      title: "How We're Bridging the Digital Divide in Rural Liberia",
-      excerpt: "Discover how our mobile tech labs are bringing computer education to remote communities, providing access to technology for students who would otherwise be left behind in the digital revolution.",
-      date: "2023-12-10",
-      readTime: "7 min read",
-      category: "stories",
-      tags: ["rural", "impact", "education"],
-      image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1472&q=80"
-    },
-    {
-      id: 6,
-      title: "Announcing Our Partnership with Tech Giants for Liberia",
-      excerpt: "We're thrilled to announce our new partnership with leading global tech companies to bring cutting-edge technology and training programs to Liberian youth, creating pathways to employment in the digital economy.",
-      date: "2023-11-28",
-      readTime: "5 min read",
-      category: "updates",
-      tags: ["partnerships", "announcement", "opportunities"],
-      image: "https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80"
-    }
-  ];
+  // Fetch blog posts from Firebase
+  useEffect(() => {
+    const fetchBlogPosts = async () => {
+      try {
+        setLoading(true);
+        // Fetch all posts and filter published ones client-side to avoid index requirement
+        const allPosts = await getBlogPosts({
+          orderByField: 'createdAt',
+          orderDirection: 'desc'
+        });
+        // Filter for published posts only
+        const publishedPosts = allPosts.filter(post => post.status === 'published');
+        // Debug: Log the posts to check tags
+        console.log('Published posts:', publishedPosts);
+        publishedPosts.forEach(post => {
+          console.log(`Post "${post.title}" tags:`, post.tags);
+          // Temporary fix: Add sample tags if none exist for testing
+          if (!post.tags || post.tags.length === 0) {
+            post.tags = ['digital-literacy', 'education', 'youth-empowerment'];
+            console.log(`Added sample tags to "${post.title}":`, post.tags);
+          }
+        });
+        setBlogPosts(publishedPosts);
+      } catch (error) {
+        console.error('Error fetching blog posts:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlogPosts();
+  }, []);
 
   const filteredPosts = blogPosts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -88,13 +60,31 @@ const Blog = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const formatDate = (dateString: string | number | Date) => {
+  const formatDate = (timestamp: any) => {
+    if (!timestamp) return new Date().toLocaleDateString('en-US');
+    
+    let date: Date;
+    if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+      date = timestamp.toDate();
+    } else if (timestamp.seconds) {
+      date = new Date(timestamp.seconds * 1000);
+    } else {
+      date = new Date(timestamp);
+    }
+    
     const options: Intl.DateTimeFormatOptions = { 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
     };
-    return new Date(dateString).toLocaleDateString('en-US', options);
+    return date.toLocaleDateString('en-US', options);
+  };
+
+  const calculateReadTime = (content: string) => {
+    const wordsPerMinute = 200;
+    const wordCount = content.split(/\s+/).length;
+    const readTime = Math.ceil(wordCount / wordsPerMinute);
+    return `${readTime} min read`;
   };
 
   return (
@@ -141,8 +131,15 @@ const Blog = () => {
           ))}
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#000054]"></div>
+          </div>
+        )}
+
         {/* Featured Post */}
-        {filteredPosts.length > 0 && (
+        {!loading && filteredPosts.length > 0 && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -152,9 +149,9 @@ const Blog = () => {
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">
               <div className="md:flex">
                 <div className="md:flex-shrink-0 md:w-1/2">
-                  <div className="relative h-full w-full">
+                  <div className="relative h-full w-full min-h-[300px]">
                     <Image 
-                      src={filteredPosts[0].image} 
+                      src={filteredPosts[0].featuredImage || 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1471&q=80'} 
                       alt={filteredPosts[0].title}
                       fill
                       className="object-cover"
@@ -176,11 +173,11 @@ const Blog = () => {
                   <div className="flex items-center text-sm text-gray-500 mb-6">
                     <span className="flex items-center mr-4">
                       <FiCalendar className="mr-1" />
-                      {formatDate(filteredPosts[0].date)}
+                      {formatDate(filteredPosts[0].publishedAt)}
                     </span>
                     <span className="flex items-center">
                       <FiClock className="mr-1" />
-                      {filteredPosts[0].readTime}
+                      {calculateReadTime(filteredPosts[0].content)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -200,6 +197,18 @@ const Blog = () => {
                       </button>
                     </div>
                   </div>
+                  {/* Tags for Featured Post */}
+                  {filteredPosts[0].tags && filteredPosts[0].tags.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <div className="flex flex-wrap gap-2">
+                        {filteredPosts[0].tags.map((tag, i) => (
+                          <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -207,63 +216,81 @@ const Blog = () => {
         )}
 
         {/* Blog Posts Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 mb-12">
-          {filteredPosts.slice(1).map((post, index) => (
-            <motion.article
-              key={post.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: (index + 1) * 0.1 }}
-              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300"
-            >
-              <div className="relative w-full h-48">
-                <Image 
-                  src={post.image} 
-                  alt={post.title}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
-              </div>
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-xs font-medium text-[#E32845] bg-red-50 px-3 py-1 rounded-full">
-                    {categories.find(cat => cat.id === post.category)?.name}
-                  </span>
-                  <div className="flex items-center text-xs text-gray-500">
-                    <FiCalendar className="mr-1" />
-                    {formatDate(post.date)}
+        {!loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 mb-12">
+            {filteredPosts.slice(1).map((post, index) => (
+              <motion.article
+                key={post.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: (index + 1) * 0.1 }}
+                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300"
+              >
+                <div className="relative w-full h-48">
+                  <Image 
+                    src={post.featuredImage || 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1471&q=80'} 
+                    alt={post.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                </div>
+                <div className="p-6">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-xs font-medium text-[#E32845] bg-red-50 px-3 py-1 rounded-full">
+                      {categories.find(cat => cat.id === post.category)?.name || post.category}
+                    </span>
+                    <div className="flex items-center text-xs text-gray-500">
+                      <FiCalendar className="mr-1" />
+                      {formatDate(post.publishedAt)}
+                    </div>
                   </div>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {post.title}
-                </h3>
-                <p className="text-gray-600 mb-4 line-clamp-2">
-                  {post.excerpt}
-                </p>
-                <div className="flex justify-between items-center">
-                  <span className="flex items-center text-sm text-gray-500">
-                    <FiClock className="mr-1" />
-                    {post.readTime}
-                  </span>
-                  <button className="text-[#000054] font-medium hover:text-[#1e1e8f] transition-colors flex items-center">
-                    Read More
-                    <FiArrowRight className="ml-1" />
-                  </button>
-                </div>
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <div className="flex flex-wrap gap-2">
-                    {post.tags.map((tag, i) => (
-                      <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                        #{tag}
-                      </span>
-                    ))}
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    {post.title}
+                  </h3>
+                  <p className="text-gray-600 mb-4 line-clamp-2">
+                    {post.excerpt}
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <span className="flex items-center text-sm text-gray-500">
+                      <FiClock className="mr-1" />
+                      {calculateReadTime(post.content)}
+                    </span>
+                    <button className="text-[#000054] font-medium hover:text-[#1e1e8f] transition-colors flex items-center">
+                      Read More
+                      <FiArrowRight className="ml-1" />
+                    </button>
                   </div>
+                  {/* Tags */}
+                  {post.tags && post.tags.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <div className="flex flex-wrap gap-2">
+                        {post.tags.map((tag, i) => (
+                          <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </motion.article>
-          ))}
-        </div>
+              </motion.article>
+            ))}
+          </div>
+        )}
+
+        {/* No Posts Message */}
+        {!loading && filteredPosts.length === 0 && (
+          <div className="text-center py-20">
+            <div className="text-gray-400 text-6xl mb-4">📝</div>
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">No blog posts found</h3>
+            <p className="text-gray-500">
+              {searchQuery || activeCategory !== 'all' 
+                ? 'Try adjusting your search or filter criteria.' 
+                : 'Check back soon for new content!'}
+            </p>
+          </div>
+        )}
 
         {/* Newsletter Subscription */}
         <div className="bg-gradient-to-r from-[#000054] to-[#1e1e8f] rounded-2xl p-8 md:p-12 text-white overflow-hidden relative mb-16">

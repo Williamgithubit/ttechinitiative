@@ -2,19 +2,21 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FiHome, FiUsers, FiCalendar, FiSettings, FiLogOut, FiBook, FiUser, FiMessageSquare, FiAward } from 'react-icons/fi';
+import { FiHome, FiUsers, FiCalendar, FiSettings, FiLogOut, FiBook, FiUser, FiMessageSquare, FiAward, FiEdit3, FiImage, FiChevronDown, FiChevronRight, FiBookOpen } from 'react-icons/fi';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/services/firebase';
 import { useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearUser, selectCurrentUser } from '@/store/Auth/authSlice';
 import toast from 'react-hot-toast';
+import { useState } from 'react';
 
 const AdminSidebar = () => {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
+  const [isContentManagementOpen, setIsContentManagementOpen] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -36,6 +38,10 @@ const AdminSidebar = () => {
 
   const isActive = (path: string) => {
     return pathname === path ? 'bg-gray-100 text-[#000054]' : 'text-gray-600 hover:bg-gray-50';
+  };
+
+  const isContentManagementActive = () => {
+    return pathname.includes('/dashboard/admin/blog') || pathname.includes('/dashboard/admin/media');
   };
 
   return (
@@ -69,6 +75,16 @@ const AdminSidebar = () => {
               </Link>
             )}
             
+            {user?.role === 'admin' && (
+              <Link
+                href="/dashboard/admin/subjects-classes"
+                className={`group flex items-center px-4 py-3 text-sm font-medium rounded-md ${isActive('/dashboard/admin/subjects-classes')}`}
+              >
+                <FiBookOpen className="mr-3 h-5 w-5" />
+                Subjects & Classes
+              </Link>
+            )}
+            
             <Link
               href="/dashboard/programs"
               className={`group flex items-center px-4 py-3 text-sm font-medium rounded-md ${isActive('/dashboard/programs')}`}
@@ -76,7 +92,43 @@ const AdminSidebar = () => {
               <FiBook className="mr-3 h-5 w-5" />
               Programs
             </Link>
-            
+
+            {/* Content Management Dropdown */}
+            <div className="space-y-1">
+              <button
+                onClick={() => setIsContentManagementOpen(!isContentManagementOpen)}
+                className={`w-full group flex items-center px-4 py-3 text-sm font-medium rounded-md ${
+                  isContentManagementActive() ? 'bg-gray-100 text-[#000054]' : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <FiEdit3 className="mr-3 h-5 w-5" />
+                Content Management
+                {isContentManagementOpen ? (
+                  <FiChevronDown className="ml-auto h-4 w-4" />
+                ) : (
+                  <FiChevronRight className="ml-auto h-4 w-4" />
+                )}
+              </button>
+              
+              {isContentManagementOpen && (
+                <div className="ml-6 space-y-1">
+                  <Link
+                    href="/dashboard/admin/blog"
+                    className={`group flex items-center px-4 py-2 text-sm font-medium rounded-md ${isActive('/dashboard/admin/blog')}`}
+                  >
+                    <FiEdit3 className="mr-3 h-4 w-4" />
+                    Blog Management
+                  </Link>
+                  <Link
+                    href="/dashboard/admin/media"
+                    className={`group flex items-center px-4 py-2 text-sm font-medium rounded-md ${isActive('/dashboard/admin/media')}`}
+                  >
+                    <FiImage className="mr-3 h-4 w-4" />
+                    Media Library
+                  </Link>
+                </div>
+              )}
+            </div>
             
             <Link
               href="/dashboard/events"

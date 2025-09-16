@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true, // Disable linting during builds
   },
   typescript: {
-    ignoreBuildErrors: true, // Disable type checking during builds
+    ignoreBuildErrors: false, // Enable type checking during builds
   },
   
   // Image optimization

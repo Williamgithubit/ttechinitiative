@@ -6,22 +6,16 @@ import {
   Typography,
   Card,
   CardContent,
-  Avatar,
+  Avatar, 
   Button,
   TextField,
   InputAdornment,
-  Grid,
   Chip,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
   Paper,
   CircularProgress,
   Alert
 } from '@mui/material';
+import Grid from "@/components/ui/Grid"
 import {
   Search as SearchIcon,
   Person as PersonIcon,
@@ -149,7 +143,7 @@ const StudentList: React.FC<StudentListProps> = ({ courseIds, onViewProfile }) =
       {filteredStudents.length > 0 ? (
         <Grid container spacing={2}>
           {filteredStudents.map((student) => (
-            <Grid item xs={12} sm={6} md={4} key={student.id}>
+            <Grid item xs={12} sm={6} md={4} key={student.id} component="div">
               <Card sx={{ height: '100%' }}>
                 <CardContent>
                   <Box display="flex" alignItems="center" mb={2}>

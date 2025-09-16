@@ -24,12 +24,12 @@ import {
   ListItemSecondaryAction,
   IconButton,
   Divider,
-  Grid,
   Paper,
   LinearProgress,
   Alert,
   CircularProgress
 } from '@mui/material';
+import Grid from "@/components/ui/Grid"
 import {
   Person as PersonIcon,
   Email as EmailIcon,
@@ -195,7 +195,7 @@ const StudentProfile: React.FC<StudentProfileProps> = ({ studentId, onClose }) =
 
               <Divider sx={{ my: 2 }} />
 
-              <Box space={2}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <Box display="flex" alignItems="center" mb={1}>
                   <EmailIcon sx={{ mr: 1, color: '#666' }} />
                   <Typography variant="body2">{profile.email}</Typography>

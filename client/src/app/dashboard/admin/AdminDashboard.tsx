@@ -24,7 +24,8 @@ import {
   Toolbar,
   CssBaseline,
   Snackbar,
-  Alert
+  Alert,
+  Collapse
 } from '@mui/material';
 import {
   InsertChart as InsertChartIcon,
@@ -38,11 +39,18 @@ import {
   School as SchoolIcon,
   Add as AddIcon,
   EmojiEvents as CertificateIcon,
-  Assignment as AssignmentIcon
+  Assignment as AssignmentIcon,
+  Create as BlogIcon,
+  PhotoLibrary as MediaIcon,
+  ExpandLess,
+  ExpandMore,
+  ContentPaste as ContentIcon,
+  MenuBook as SubjectsIcon
 } from '@mui/icons-material';
 
 // Import Admin Components
 import UserManagement from '@/components/admin/UserManagement';
+import SubjectClassesManagement from '@/components/admin/SubjectClassesManagement';
 import ProgramManagement from '@/components/admin/ProgramManagement/ProgramManagement';
 import EventManagement from '@/components/admin/EventManagement/EventManagement';
 import Settings from '@/components/admin/Settings/Settings';
@@ -50,15 +58,30 @@ import Dashboard from '@/components/admin/Dashboard';
 import Reports from '@/components/admin/Reports';
 import Certificate from '@/components/admin/Certificate';
 import AdmissionManagement from '@/components/admin/AdmissionManagement';
+import NotificationSystem from '@/components/admin/NotificationSystem';
+import GlobalSearch from '@/components/admin/GlobalSearch';
+import BlogManagement from '@/components/admin/BlogManagement';
+import MediaLibrary from '@/components/admin/MediaLibrary';
 
 const drawerWidth = 240;
 
 const tabs = [
   { id: 'dashboard', label: 'Dashboard', icon: <InsertChartIcon /> },
   { id: 'users', label: 'User Management', icon: <PeopleIcon /> },
+  { id: 'subjects', label: 'Subjects & Classes', icon: <SubjectsIcon /> },
   { id: 'programs', label: 'Programs', icon: <SchoolIcon /> },
   { id: 'admissions', label: 'Admissions', icon: <AssignmentIcon /> },
   { id: 'certificates', label: 'Certificates', icon: <CertificateIcon /> },
+  { 
+    id: 'content', 
+    label: 'Content Magt', 
+    icon: <ContentIcon />,
+    isDropdown: true,
+    children: [
+      { id: 'blog', label: 'Blog Management', icon: <BlogIcon /> },
+      { id: 'media', label: 'Media Library', icon: <MediaIcon /> },
+    ]
+  },
   { id: 'reports', label: 'Reports', icon: <ArticleIcon /> },
   { id: 'events', label: 'Events', icon: <EventIcon /> },
   { id: 'settings', label: 'Settings', icon: <SettingsIcon /> },
@@ -67,6 +90,7 @@ const tabs = [
 export default function AdminDashboard() {
   const [tab, setTab] = useState('dashboard');
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [contentDropdownOpen, setContentDropdownOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -77,6 +101,8 @@ export default function AdminDashboard() {
   const [programDialogOpen, setProgramDialogOpen] = useState(false);
   const [eventDialogOpen, setEventDialogOpen] = useState(false);
   const [certificateDialogOpen, setCertificateDialogOpen] = useState(false);
+  const [blogDialogOpen, setBlogDialogOpen] = useState(false);
+  const [mediaDialogOpen, setMediaDialogOpen] = useState(false);
   
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -144,42 +170,130 @@ export default function AdminDashboard() {
       <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.2)' }} />
       {/* Navigation */}
       <List>
-        {tabs.map(({ id, label, icon }) => (
-          <ListItem key={id} disablePadding>
-            <ListItemButton
-              selected={tab === id}
-              onClick={() => setTab(id)}
-              sx={{
-                color: 'rgba(255, 255, 255, 0.8)',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  color: 'white',
-                },
-                '&.Mui-selected': {
-                  backgroundColor: 'rgba(227, 40, 69, 0.2)',
-                  color: 'white',
+        {tabs.map((tabItem) => {
+          const { id, label, icon, isDropdown, children } = tabItem;
+          
+          if (isDropdown && children) {
+            return (
+              <React.Fragment key={id}>
+                <ListItem disablePadding>
+                  <ListItemButton
+                    selected={children.some(child => child.id === tab)}
+                    onClick={() => setContentDropdownOpen(!contentDropdownOpen)}
+                    sx={{
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        color: 'white',
+                      },
+                      '&.Mui-selected': {
+                        backgroundColor: 'rgba(227, 40, 69, 0.2)',
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: 'rgba(227, 40, 69, 0.3)',
+                        },
+                      },
+                    }}
+                  >
+                    <ListItemIcon sx={{ minWidth: 40 }}>
+                      {React.cloneElement(icon, {
+                        sx: { color: children.some(child => child.id === tab) ? '#E32845' : 'rgba(255, 255, 255, 0.8)' }
+                      })}
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary={label} 
+                      sx={{ 
+                        '& .MuiListItemText-primary': { 
+                          color: 'inherit' 
+                        } 
+                      }} 
+                    />
+                    {contentDropdownOpen ? <ExpandLess sx={{ color: 'rgba(255, 255, 255, 0.8)' }} /> : <ExpandMore sx={{ color: 'rgba(255, 255, 255, 0.8)' }} />}
+                  </ListItemButton>
+                </ListItem>
+                <Collapse in={contentDropdownOpen} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {children.map((child) => (
+                      <ListItem key={child.id} disablePadding>
+                        <ListItemButton
+                          selected={tab === child.id}
+                          onClick={() => setTab(child.id)}
+                          sx={{
+                            pl: 4,
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            '&:hover': {
+                              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                              color: 'white',
+                            },
+                            '&.Mui-selected': {
+                              backgroundColor: 'rgba(227, 40, 69, 0.2)',
+                              color: 'white',
+                              '&:hover': {
+                                backgroundColor: 'rgba(227, 40, 69, 0.3)',
+                              },
+                            },
+                          }}
+                        >
+                          <ListItemIcon sx={{ minWidth: 40 }}>
+                            {React.cloneElement(child.icon, {
+                              sx: { color: tab === child.id ? '#E32845' : 'rgba(255, 255, 255, 0.7)' }
+                            })}
+                          </ListItemIcon>
+                          <ListItemText 
+                            primary={child.label} 
+                            sx={{ 
+                              '& .MuiListItemText-primary': { 
+                                color: 'inherit',
+                                fontSize: '0.875rem'
+                              } 
+                            }} 
+                          />
+                        </ListItemButton>
+                      </ListItem>
+                    ))}
+                  </List>
+                </Collapse>
+              </React.Fragment>
+            );
+          }
+          
+          return (
+            <ListItem key={id} disablePadding>
+              <ListItemButton
+                selected={tab === id}
+                onClick={() => setTab(id)}
+                sx={{
+                  color: 'rgba(255, 255, 255, 0.8)',
                   '&:hover': {
-                    backgroundColor: 'rgba(227, 40, 69, 0.3)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    color: 'white',
                   },
-                },
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 40 }}>
-                {React.cloneElement(icon, {
-                  sx: { color: tab === id ? '#E32845' : 'rgba(255, 255, 255, 0.8)' }
-                })}
-              </ListItemIcon>
-              <ListItemText 
-                primary={label} 
-                sx={{ 
-                  '& .MuiListItemText-primary': { 
-                    color: 'inherit' 
-                  } 
-                }} 
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
+                  '&.Mui-selected': {
+                    backgroundColor: 'rgba(227, 40, 69, 0.2)',
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: 'rgba(227, 40, 69, 0.3)',
+                    },
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 40 }}>
+                  {React.cloneElement(icon, {
+                    sx: { color: tab === id ? '#E32845' : 'rgba(255, 255, 255, 0.8)' }
+                  })}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={label} 
+                  sx={{ 
+                    '& .MuiListItemText-primary': { 
+                      color: 'inherit' 
+                    } 
+                  }} 
+                />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
       </List>
       {/* Logout Button */}
         <Box sx={{ mt: 'auto', p: 2 }}>
@@ -247,12 +361,35 @@ export default function AdminDashboard() {
               flexGrow: 1,
               fontSize: { xs: '1rem', sm: '1.25rem' } 
             }}>
-              {tabs.find(t => t.id === tab)?.label || 'Dashboard'}
+              {(() => {
+                // First check if it's a direct tab
+                const directTab = tabs.find(t => t.id === tab);
+                if (directTab) return directTab.label;
+                
+                // Then check if it's a child tab
+                for (const tabItem of tabs) {
+                  if (tabItem.children) {
+                    const childTab = tabItem.children.find(child => child.id === tab);
+                    if (childTab) return childTab.label;
+                  }
+                }
+                
+                return 'Dashboard';
+              })()}
             </Typography>
           </Box>
           
-          {/* User Name in Header */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          {/* Header Actions */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
+            {/* Global Search */}
+            <Box sx={{ display: { xs: 'none', md: 'block' }, minWidth: 250 }}>
+              <GlobalSearch />
+            </Box>
+            
+            {/* Notifications */}
+            <NotificationSystem />
+            
+            {/* User Name */}
             {user && (
               <Typography
                 variant="body2"
@@ -267,6 +404,8 @@ export default function AdminDashboard() {
                 {user.displayName || user.email?.split('@')[0] || 'User'}
               </Typography>
             )}
+            
+            {/* Add Button */}
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -285,9 +424,37 @@ export default function AdminDashboard() {
                   case 'certificates':
                     setCertificateDialogOpen(true);
                     break;
+                  case 'blog':
+                    setBlogDialogOpen(true);
+                    break;
+                  case 'media':
+                    setMediaDialogOpen(true);
+                    break;
                   default:
-                    setSnackbar({ open: true, message: `Add new ${tabs.find(t => t.id === tab)?.label || 'item'} functionality coming soon!`, severity: 'info' });
+                    // Check if it's a child tab
+                    let tabLabel = 'item';
+                    const directTab = tabs.find(t => t.id === tab);
+                    if (directTab) {
+                      tabLabel = directTab.label;
+                    } else {
+                      for (const tabItem of tabs) {
+                        if (tabItem.children) {
+                          const childTab = tabItem.children.find(child => child.id === tab);
+                          if (childTab) {
+                            tabLabel = childTab.label;
+                            break;
+                          }
+                        }
+                      }
+                    }
+                    setSnackbar({ open: true, message: `Add new ${tabLabel} functionality coming soon!`, severity: 'info' });
                 }
+              }}
+              sx={{
+                backgroundColor: '#E32845',
+                '&:hover': {
+                  backgroundColor: '#c41e3a',
+                },
               }}
             >
               {isMobile ? 'Add' : 'Add New'}
@@ -356,9 +523,12 @@ export default function AdminDashboard() {
       >
         {tab === 'dashboard' && <Dashboard />}
         {tab === 'users' && <UserManagement openDialog={userDialogOpen} onCloseDialog={() => setUserDialogOpen(false)} />}
+        {tab === 'subjects' && <SubjectClassesManagement />}
         {tab === 'programs' && <ProgramManagement openDialog={programDialogOpen} onCloseDialog={() => setProgramDialogOpen(false)} />}
         {tab === 'admissions' && <AdmissionManagement isAdmin={true} />}
         {tab === 'certificates' && <Certificate />}
+        {tab === 'blog' && <BlogManagement openDialog={blogDialogOpen} onCloseDialog={() => setBlogDialogOpen(false)} />}
+        {tab === 'media' && <MediaLibrary openDialog={mediaDialogOpen} onCloseDialog={() => setMediaDialogOpen(false)} />}
         {tab === 'reports' && <Reports />}
         {tab === 'events' && <EventManagement openDialog={eventDialogOpen} onCloseDialog={() => setEventDialogOpen(false)} />}
         {tab === 'settings' && (

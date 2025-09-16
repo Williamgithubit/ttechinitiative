@@ -30,6 +30,19 @@ import {
   Avatar,
   TablePagination,
   CircularProgress,
+  Tabs,
+  Tab,
+  Autocomplete,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Divider,
+  Alert,
+  Snackbar
 } from '@mui/material';
 import Grid from '@/components/ui/Grid';
 import {
@@ -39,7 +52,28 @@ import {
   Search as SearchIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
+  School as SchoolIcon,
+  Person as PersonIcon,
+  SupervisorAccount as SupervisorAccountIcon,
+  ExpandMore as ExpandMoreIcon,
+  Subject as SubjectIcon,
+  Class as ClassIcon
 } from '@mui/icons-material';
+import {
+  userManagementService,
+  Teacher,
+  Student,
+  Parent,
+  Subject,
+  Class,
+  CreateTeacherData,
+  CreateStudentData,
+  CreateParentData
+} from '@/services/userManagementService';
+import { TeachersTab, StudentsTab, ParentsTab } from './UserManagementTabs';
+import TeacherFormDialog from './TeacherFormDialog';
+import StudentFormDialog from './StudentFormDialog';
+import ParentFormDialog from './ParentFormDialog';
 
 interface User {
   id: string;
@@ -69,6 +103,39 @@ interface UserFormDialogProps {
   isSubmitting: boolean;
 }
 
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`user-tabpanel-${index}`}
+      aria-labelledby={`user-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
+}
+
+function a11yProps(index: number) {
+  return {
+    id: `user-tab-${index}`,
+    'aria-controls': `user-tabpanel-${index}`,
+  };
+}
+
 interface UserManagementProps {
   openDialog?: boolean;
   onCloseDialog?: () => void;
@@ -76,11 +143,25 @@ interface UserManagementProps {
 
 const UserManagement: React.FC<UserManagementProps> = ({ openDialog = false, onCloseDialog }) => {
   const [users, setUsers] = useState<User[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [parents, setParents] = useState<Parent[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
+  
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  
+  const [tabValue, setTabValue] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogType, setDialogType] = useState<'teacher' | 'student' | 'parent'>('teacher');
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [editingParent, setEditingParent] = useState<Parent | null>(null);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -127,8 +208,35 @@ const UserManagement: React.FC<UserManagementProps> = ({ openDialog = false, onC
     }
   };
 
+  const fetchRoleSpecificData = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch all role-specific data in parallel
+      const [teachersData, studentsData, parentsData, subjectsData, classesData] = await Promise.all([
+        userManagementService.getTeachers(),
+        userManagementService.getStudents(),
+        userManagementService.getParents(),
+        userManagementService.getSubjects(),
+        userManagementService.getClasses()
+      ]);
+      
+      setTeachers(teachersData);
+      setStudents(studentsData);
+      setParents(parentsData);
+      setSubjects(subjectsData);
+      setClasses(classesData);
+    } catch (error) {
+      console.error('Error fetching role-specific data:', error);
+      setError(error instanceof Error ? error.message : 'Failed to fetch data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchRoleSpecificData();
   }, []);
 
   // Handle external dialog open request from parent component
@@ -185,15 +293,88 @@ const UserManagement: React.FC<UserManagementProps> = ({ openDialog = false, onC
     }
   };
 
+  // Role-specific handlers
+  const handleCreateTeacher = async (teacherData: CreateTeacherData) => {
+    try {
+      setIsSubmitting(true);
+      await userManagementService.createTeacher(teacherData);
+      setSuccess('Teacher created successfully');
+      await fetchRoleSpecificData();
+      handleCloseDialog();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to create teacher');
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCreateStudent = async (studentData: CreateStudentData) => {
+    try {
+      setIsSubmitting(true);
+      await userManagementService.createStudent(studentData);
+      setSuccess('Student created successfully');
+      await fetchRoleSpecificData();
+      handleCloseDialog();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to create student');
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCreateParent = async (parentData: CreateParentData) => {
+    try {
+      setIsSubmitting(true);
+      await userManagementService.createParent(parentData);
+      setSuccess('Parent created successfully');
+      await fetchRoleSpecificData();
+      handleCloseDialog();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to create parent');
+      throw error;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleOpenDialog = (user: User | null = null) => {
     setEditingUser(user);
     setDialogOpen(true);
   };
 
+  const handleOpenRoleDialog = (type: 'teacher' | 'student' | 'parent', editItem: any = null) => {
+    setDialogType(type);
+    setDialogOpen(true);
+    
+    switch (type) {
+      case 'teacher':
+        setEditingTeacher(editItem);
+        break;
+      case 'student':
+        setEditingStudent(editItem);
+        break;
+      case 'parent':
+        setEditingParent(editItem);
+        break;
+    }
+  };
+
   const handleCloseDialog = () => {
     setDialogOpen(false);
     setEditingUser(null);
+    setEditingTeacher(null);
+    setEditingStudent(null);
+    setEditingParent(null);
     setError(null);
+    setSuccess(null);
+  };
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+    setPage(0);
+    setSearchTerm('');
   };
 
   const handleSaveUser = async (userData: CreateUserData) => {
@@ -322,7 +503,10 @@ const UserManagement: React.FC<UserManagementProps> = ({ openDialog = false, onC
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
+          onClick={() => {
+            const roleTypes = ['teacher', 'student', 'parent'] as const;
+            handleOpenRoleDialog(roleTypes[tabValue]);
+          }}
           disabled={isLoading}
           fullWidth={useMediaQuery(theme.breakpoints.down('sm'))}
           size={useMediaQuery(theme.breakpoints.down('sm')) ? 'small' : 'medium'}
@@ -333,230 +517,173 @@ const UserManagement: React.FC<UserManagementProps> = ({ openDialog = false, onC
             },
           }}
         >
-          Add User
+          Add {tabValue === 0 ? 'Teacher' : tabValue === 1 ? 'Student' : 'Parent'}
         </Button>
       </Box>
 
-      {error && (
-        <Box sx={{ mb: 2, color: 'error.main' }}>
-          <Typography color="error">{error}</Typography>
-        </Box>
-      )}
-
-      <Paper 
-        sx={{ 
-          p: { xs: 1.5, sm: 2 }, 
-          mb: 3,
-          background: 'white',
-          borderRadius: 2,
-          border: '1px solid rgba(0, 0, 84, 0.1)',
-        }}
+      {/* Success/Error Messages */}
+      <Snackbar
+        open={!!success}
+        autoHideDuration={6000}
+        onClose={() => setSuccess(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Grid container spacing={{ xs: 1, sm: 2 }}>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Search users..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#000054',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#000054',
-                  },
-                },
-                '& .MuiInputLabel-root.Mui-focused': {
-                  color: '#000054',
-                },
-              }}
-              InputProps={{
-                startAdornment: <SearchIcon sx={{ mr: 1, color: '#000054' }} />,
-              }}
-            />
-          </Grid>
-          <Grid item xs={6} md={3}>
-            <FormControl fullWidth margin="normal">
-              <InputLabel sx={{ '&.Mui-focused': { color: '#000054' } }}>Filter by Role</InputLabel>
-              <Select
-                value={roleFilter}
-                label="Filter by Role"
-                onChange={(e) => setRoleFilter(e.target.value)}
-                sx={{
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#000054',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#000054',
-                  },
-                }}
-              >
-                <MenuItem value="">All Roles</MenuItem>
-                <MenuItem value="admin">Admin</MenuItem>
-                <MenuItem value="teacher">Teacher</MenuItem>
-                <MenuItem value="student">Student</MenuItem>
-                <MenuItem value="parent">Parent</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={6} md={3}>
-            <FormControl fullWidth margin="normal">
-              <InputLabel sx={{ '&.Mui-focused': { color: '#000054' } }}>Filter by Status</InputLabel>
-              <Select
-                value={statusFilter}
-                label="Filter by Status"
-                onChange={(e) => setStatusFilter(e.target.value)}
-                sx={{
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#000054',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#000054',
-                  },
-                }}
-              >
-                <MenuItem value="">All Statuses</MenuItem>
-                <MenuItem value="active">Active</MenuItem>
-                <MenuItem value="inactive">Inactive</MenuItem>
-                <MenuItem value="suspended">Suspended</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
-      </Paper>
+        <Alert onClose={() => setSuccess(null)} severity="success" sx={{ width: '100%' }}>
+          {success}
+        </Alert>
+      </Snackbar>
 
-      <Paper sx={{ width: '100%', overflow: 'hidden', borderRadius: 2 }}>
-        {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : users.length === 0 ? (
-          <Box sx={{ p: 4, textAlign: 'center' }}>
-            <Typography>No users found</Typography>
-          </Box>
-        ) : (
-          <TableContainer sx={{ overflowX: 'auto' }}>
-            <Table size={isMobile ? 'small' : 'medium'}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Role</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Last Login</TableCell>
-                  <TableCell align="right">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredUsers
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((user) => (
-                    <TableRow key={user.id} hover>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Avatar sx={{ 
-                            width: { xs: 28, sm: 32 }, 
-                            height: { xs: 28, sm: 32 }, 
-                            mr: 1,
-                            fontSize: { xs: '0.75rem', sm: '0.875rem' }
-                          }}>
-                            {user.name.charAt(0)}
-                          </Avatar>
-                          <Typography 
-                            sx={{ 
-                              fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              maxWidth: { xs: '80px', sm: '120px', md: '200px' }
-                            }}
-                          >
-                            {user.name}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography 
-                          sx={{ 
-                            fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            maxWidth: { xs: '80px', sm: '120px', md: '200px' }
-                          }}
-                        >
-                          {user.email}
-                        </Typography>
-                      </TableCell>
-                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
-                        <Chip
-                          label={user.role}
-                          color={getRoleColor(user.role) as 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'}
-                          size="small"
-                          variant="outlined"
-                          sx={{ '& .MuiChip-label': { fontSize: { xs: '0.65rem', sm: '0.75rem' } } }}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}>
-                          {getStatusIcon(user.status)}
-                          <Box sx={{ ml: 1, display: { xs: 'none', sm: 'block' } }}>
-                            <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                              {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </TableCell>
-                      <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                        <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                          {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-                          <Tooltip title="Edit">
-                            <IconButton
-                              onClick={() => handleOpenDialog(user)}
-                              size="small"
-                              sx={{ p: { xs: 0.5, sm: 1 } }}
-                            >
-                              <EditIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete">
-                            <IconButton 
-                              onClick={() => handleDeleteUser(user.id)} 
-                              color="error"
-                              size="small"
-                              sx={{ p: { xs: 0.5, sm: 1 } }}
-                            >
-                              <DeleteIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-            <TablePagination
-              rowsPerPageOptions={[5, 10, 25]}
-              component="div"
-              count={filteredUsers.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-            />
-          </TableContainer>
-        )}
-      </Paper>
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setError(null)} severity="error" sx={{ width: '100%' }}>
+          {error}
+        </Alert>
+      </Snackbar>
+
+      {/* Tabs */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs 
+          value={tabValue} 
+          onChange={handleTabChange}
+          variant={isMobile ? "fullWidth" : "standard"}
+          sx={{
+            '& .MuiTab-root': {
+              color: '#000054',
+              '&.Mui-selected': {
+                color: '#E32845',
+              },
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: '#E32845',
+            },
+          }}
+        >
+          <Tab 
+            label="Teachers" 
+            icon={<PersonIcon />} 
+            iconPosition="start"
+            {...a11yProps(0)} 
+          />
+          <Tab 
+            label="Students" 
+            icon={<SchoolIcon />} 
+            iconPosition="start"
+            {...a11yProps(1)} 
+          />
+          <Tab 
+            label="Parents" 
+            icon={<SupervisorAccountIcon />} 
+            iconPosition="start"
+            {...a11yProps(2)} 
+          />
+        </Tabs>
+      </Box>
+
+      {/* Tab Panels */}
+      <TabPanel value={tabValue} index={0}>
+        <TeachersTab 
+          teachers={teachers}
+          subjects={subjects}
+          classes={classes}
+          isLoading={isLoading}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          onEdit={(teacher) => handleOpenRoleDialog('teacher', teacher)}
+          onDelete={async (teacherId) => {
+            if (window.confirm('Are you sure you want to delete this teacher?')) {
+              try {
+                await userManagementService.deleteTeacher(teacherId);
+                setSuccess('Teacher deleted successfully');
+                await fetchRoleSpecificData();
+              } catch (error) {
+                setError(error instanceof Error ? error.message : 'Failed to delete teacher');
+              }
+            }
+          }}
+        />
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={1}>
+        <StudentsTab 
+          students={students}
+          classes={classes}
+          parents={parents}
+          isLoading={isLoading}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          onEdit={(student) => handleOpenRoleDialog('student', student)}
+          onDelete={async (studentId) => {
+            if (window.confirm('Are you sure you want to delete this student?')) {
+              try {
+                await userManagementService.deleteStudent(studentId);
+                setSuccess('Student deleted successfully');
+                await fetchRoleSpecificData();
+              } catch (error) {
+                setError(error instanceof Error ? error.message : 'Failed to delete student');
+              }
+            }
+          }}
+        />
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={2}>
+        <ParentsTab 
+          parents={parents}
+          students={students}
+          isLoading={isLoading}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          onEdit={(parent) => handleOpenRoleDialog('parent', parent)}
+          onDelete={async (parentId) => {
+            if (window.confirm('Are you sure you want to delete this parent?')) {
+              try {
+                await userManagementService.deleteParent(parentId);
+                setSuccess('Parent deleted successfully');
+                await fetchRoleSpecificData();
+              } catch (error) {
+                setError(error instanceof Error ? error.message : 'Failed to delete parent');
+              }
+            }
+          }}
+        />
+      </TabPanel>
+
+      {/* Role-specific Dialogs */}
+      <TeacherFormDialog
+        open={dialogOpen && dialogType === 'teacher'}
+        onClose={handleCloseDialog}
+        onSave={handleCreateTeacher}
+        teacher={editingTeacher}
+        subjects={subjects}
+        classes={classes}
+        isSubmitting={isSubmitting}
+      />
+
+      <StudentFormDialog
+        open={dialogOpen && dialogType === 'student'}
+        onClose={handleCloseDialog}
+        onSave={handleCreateStudent}
+        student={editingStudent}
+        parents={parents}
+        classes={classes}
+        isSubmitting={isSubmitting}
+      />
+
+      <ParentFormDialog
+        open={dialogOpen && dialogType === 'parent'}
+        onClose={handleCloseDialog}
+        onSave={handleCreateParent}
+        parent={editingParent}
+        students={students}
+        isSubmitting={isSubmitting}
+      />
 
       <UserFormDialog
-        open={dialogOpen}
+        open={dialogOpen && !dialogType}
         onClose={handleCloseDialog}
         onSave={handleSaveUser}
         user={editingUser}

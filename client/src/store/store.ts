@@ -9,6 +9,7 @@ import createWebStorage from 'redux-persist/lib/storage/createWebStorage';
 import authReducer from './Auth/authSlice';
 import userManagementReducer from './Admin/userManagementSlice';
 import programReducer from './Admin/programSlice';
+import subjectClassReducer from './Admin/subjectClassSlice';
 import { apiSlice } from './apiSlice';
 import { userManagementApi } from './Admin/userManagementApi';
 
@@ -34,6 +35,7 @@ const rootReducer = combineReducers({
   auth: authReducer,
   userManagement: userManagementReducer,
   program: programReducer,
+  subjectClass: subjectClassReducer,
   [apiSlice.reducerPath]: apiSlice.reducer,
   [userManagementApi.reducerPath]: userManagementApi.reducer,
 });

@@ -5,7 +5,6 @@ import {
   Box,
   Paper,
   Typography,
-  Grid,
   Card,
   CardContent,
   Table,
@@ -25,6 +24,7 @@ import {
   Alert,
   CircularProgress
 } from '@mui/material';
+import Grid from "@/components/ui/Grid"
 import {
   TrendingUp as TrendingUpIcon,
   TrendingDown as TrendingDownIcon,
@@ -197,7 +197,7 @@ const AttendanceDashboard: React.FC = () => {
 
       {/* Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card sx={{ background: 'linear-gradient(135deg, #000054 0%, #1a1a6e 100%)', color: 'white' }}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -215,7 +215,7 @@ const AttendanceDashboard: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card sx={{ background: 'linear-gradient(135deg, #E32845 0%, #c41e3a 100%)', color: 'white' }}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -233,7 +233,7 @@ const AttendanceDashboard: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card sx={{ background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)', color: 'white' }}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -251,7 +251,7 @@ const AttendanceDashboard: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <Card sx={{ background: 'linear-gradient(135deg, #2196f3 0%, #1565c0 100%)', color: 'white' }}>
             <CardContent>
               <Box display="flex" alignItems="center" justifyContent="space-between">

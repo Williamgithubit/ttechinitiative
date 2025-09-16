@@ -18,13 +18,8 @@ import {
   MenuItem,
   Switch,
   FormControlLabel,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
   IconButton,
   Chip,
-  Grid,
   Paper,
   Tabs,
   Tab,
@@ -37,8 +32,8 @@ import {
   LinearProgress,
   Alert,
   CircularProgress,
-  Divider
-} from '@mui/material';
+} from '@mui/material'; 
+import Grid from '@/components/ui/Grid'; 
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -54,6 +49,7 @@ import {
 } from '@mui/icons-material';
 import { Assignment, AssignmentSubmission, AssignmentAnalytics } from '@/types/assignment';
 import { AssignmentService } from '@/services/assignmentService';
+import { Timestamp } from 'firebase/firestore';
 
 interface AssignmentManagementProps {
   courseIds: string[];
@@ -177,7 +173,7 @@ const AssignmentManagement: React.FC<AssignmentManagementProps> = ({ courseIds, 
       const assignmentData = {
         ...formData,
         teacherId,
-        dueDate: new Date(formData.dueDate),
+        dueDate: Timestamp.fromDate(new Date(formData.dueDate)),
         settings: {
           allowLateSubmissions: formData.allowLateSubmissions,
           latePenalty: formData.latePenalty,

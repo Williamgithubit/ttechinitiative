@@ -18,6 +18,7 @@ export interface DashboardStats {
   tasksCompleted: number;
   totalCertificates: number;
   totalAdmissions: number;
+  totalBlogPosts: number;
 }
 
 export interface RecentActivity {
@@ -51,6 +52,7 @@ export const fetchDashboardStats = async (): Promise<DashboardStats> => {
         tasksCompleted: data.tasksCompleted ?? 0,
         totalCertificates: data.totalCertificates ?? 0,
         totalAdmissions: data.totalAdmissions ?? 0,
+        totalBlogPosts: data.totalBlogPosts ?? 0,
       };
     }
 
@@ -111,6 +113,10 @@ export const fetchDashboardStats = async (): Promise<DashboardStats> => {
     const admissionsSnapshot = await getDocs(collection(db, "admissionApplications"));
     const totalAdmissions = admissionsSnapshot.size;
 
+    // Fetch total blog posts count
+    const blogPostsSnapshot = await getDocs(collection(db, "blogPosts"));
+    const totalBlogPosts = blogPostsSnapshot.size;
+
     return {
       totalUsers,
       activePrograms,
@@ -118,6 +124,7 @@ export const fetchDashboardStats = async (): Promise<DashboardStats> => {
       tasksCompleted,
       totalCertificates,
       totalAdmissions,
+      totalBlogPosts,
     };
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);

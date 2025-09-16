@@ -73,7 +73,7 @@ const UsersPage = () => {
         email: newUser.email,
         role: newUser.role,
         password: newUser.password
-      }, currentUser?.uid);
+      });
       
       toast.success('User created successfully');
       setNewUser({
@@ -92,12 +92,12 @@ const UsersPage = () => {
     }
   };
 
-  const handleDeleteUser = async (userId: string) => {
+  const handleDeleteUser = async (userId: string, userRole: string) => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
     
     try {
       setIsDeleting(userId);
-      await deleteUser(userId);
+      await deleteUser(userId, userRole);
       toast.success('User deleted successfully');
       fetchUsers();
     } catch (error) {
@@ -109,7 +109,7 @@ const UsersPage = () => {
   };
 
   const getRoleBadge = (role: string) => {
-    const roleClasses = {
+    const roleClasses: Record<string, string> = {
       [ROLES.ADMIN]: 'bg-purple-100 text-purple-800',
       [ROLES.TEACHER]: 'bg-blue-100 text-blue-800',
       [ROLES.PARENT]: 'bg-green-100 text-green-800',
@@ -348,7 +348,7 @@ const UsersPage = () => {
                         </button>
                         {currentUser?.role === ROLES.ADMIN && user.id !== currentUser?.uid && (
                           <button
-                            onClick={() => handleDeleteUser(user.id)}
+                            onClick={() => handleDeleteUser(user.id, user.role)}
                             className="text-red-600 hover:text-red-900"
                             disabled={isDeleting === user.id}
                           >

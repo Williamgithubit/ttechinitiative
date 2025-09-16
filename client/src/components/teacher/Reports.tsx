@@ -6,26 +6,17 @@ import {
   Card,
   CardContent,
   Typography,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  TextField,
   Button,
   Chip,
   Avatar,
   LinearProgress,
   Alert,
   CircularProgress,
-  Paper,
   Divider,
   List,
   ListItem,
   ListItemText,
   ListItemAvatar,
-  IconButton,
-  Tooltip,
   Tab,
   Tabs
 } from '@mui/material';
@@ -418,7 +409,7 @@ const Reports: React.FC<ReportsProps> = ({ teacherId }) => {
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) => `${name} ${(percent ?? 0) * 100}%`}
                   >
                     {getAssignmentTypeDistribution().map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />

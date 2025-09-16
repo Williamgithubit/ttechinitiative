@@ -5,10 +5,24 @@ import { FirebaseCertificate } from '@/services/firebaseCertificateService';
 
 export async function POST(request: NextRequest) {
   try {
-    const { certificateNumber } = await request.json();
+    console.log('Certificate verification API called');
+    
+    // Parse request body
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      return NextResponse.json(
+        { error: 'Invalid request format' },
+        { status: 400 }
+      );
+    }
+
+    const { certificateNumber } = body;
 
     // Validate input
-    if (!certificateNumber) {
+    if (!certificateNumber || typeof certificateNumber !== 'string') {
       return NextResponse.json(
         { error: 'Certificate number is required' },
         { status: 400 }
@@ -17,6 +31,16 @@ export async function POST(request: NextRequest) {
 
     // Clean the certificate number
     const cleanCertNumber = certificateNumber.trim();
+
+    // Test Firebase connection first
+    console.log('Testing Firebase connection...');
+    if (!db) {
+      console.error('Firebase database not initialized');
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 500 }
+      );
+    }
 
     // Get certificate from Firestore
     const docRef = doc(db, 'certificates', cleanCertNumber);
@@ -29,13 +53,25 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const certificateData = docSnap.data() as FirebaseCertificate;
-
-    // Check if certificate is valid
-    if (certificateData.status !== 'Valid') {
+    const certificateData = docSnap.data();
+    // Validate certificate data structure
+    if (!certificateData) {
+      console.error('Certificate data is null or undefined');
       return NextResponse.json({
         success: false,
-        error: `Certificate status: ${certificateData.status}`
+        error: 'Invalid certificate data format.'
+      }, { status: 400 });
+    }
+
+    // Type assertion with validation
+    const certData = certificateData as Partial<FirebaseCertificate>;
+    console.log('Processed certificate data:', certData);
+
+    // Check if certificate is valid
+    if (certData.status !== 'Valid') {
+      return NextResponse.json({
+        success: false,
+        error: certData.status ? `Certificate status: ${certData.status}` : 'Certificate is not valid.'
       });
     }
 
@@ -55,21 +91,29 @@ export async function POST(request: NextRequest) {
       }
     };
 
-    return NextResponse.json({
+    if (!certData.certificateNumber || !certData.fullName || !certData.program || certData.yearOfCompletion === undefined) {
+      return NextResponse.json({
+        success: false,
+        error: 'Certificate data is incomplete.'
+      }, { status: 500 });
+    }
+
+    const response = {
       success: true,
       certificate: {
-        certificateNumber: certificateData.certificateNumber,
-        studentName: certificateData.fullName,
-        program: certificateData.program,
-        graduationYear: certificateData.yearOfCompletion,
-        status: certificateData.status.toLowerCase(),
-        issuedDate: formatDate(certificateData.createdAt),
-        studentImageUrl: certificateData.studentImageUrl || null
+        certificateNumber: certData.certificateNumber,
+        studentName: certData.fullName,
+        program: certData.program,
+        graduationYear: certData.yearOfCompletion,
+        status: (certData.status || '').toLowerCase(),
+        issuedDate: formatDate(certData.createdAt),
+        studentImageUrl: certData.studentImageUrl || null
       }
-    });
+    };
+    
+    return NextResponse.json(response);
 
   } catch (error) {
-    console.error('Certificate verification API error:', error);
     return NextResponse.json(
       { error: 'Internal server error. Please try again later.' },
       { status: 500 }

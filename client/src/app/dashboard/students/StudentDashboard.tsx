@@ -1,6 +1,7 @@
 import { usePrograms } from "../../../context/ProgramContext";
 import { motion } from "framer-motion";
 import { useAuth } from "../../../context/AuthContext";
+import { ProgramType } from "../../../store/types";
 
 const StudentDashboard = () => {
   const { programs } = usePrograms();
@@ -23,9 +24,9 @@ const StudentDashboard = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        {programs.map((program) => (
+        {programs.map((program: ProgramType) => (
           <div key={program.id} className="p-4 border rounded-lg shadow-md">
-            <h3 className="text-xl font-bold">{program.title}</h3>
+            <h3 className="text-xl font-bold">{program.name}</h3>
             <p className="text-gray-600">{program.description}</p>
             <button className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">
               View Materials

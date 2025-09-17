@@ -108,6 +108,8 @@ class SubjectClassService {
 
       return {
         id: docRef.id,
+        name: subjectData.name,
+        code: subjectData.code,
         ...newSubject,
         teacher
       };

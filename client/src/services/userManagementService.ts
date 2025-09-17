@@ -744,7 +744,11 @@ class UserManagementService {
   }
 }
 
-export const userManagementService = new UserManagementService();
+const userManagementService = new UserManagementService();
+
+// Export as both named and default export for compatibility
+export { userManagementService };
+export default userManagementService;
 
 // Export specific fetch functions for compatibility
 export const fetchTeachers = () => userManagementService.getTeachers();
